@@ -44,7 +44,7 @@ var (
 
 func init() {
 	//setting up logger
-	//logs.SetLogger(logs.AdapterFile, `{"filename":"eventer.log"}`)
+	logs.SetLogger(logs.AdapterFile, `{"filename":"./logs/eventer.log"}`)
 	logs.EnableFuncCallDepth(true)
 	logs.SetLogFuncCallDepth(3)
 	//read config file
@@ -144,7 +144,7 @@ func Run(taskBus chan<- func()) (int, error) {
 		c.ColorPrint(9, "Input event or command > ")
 		input, err := reader.ReadString('\n')
 		if err != nil {
-			logs.Error("Bufio ReadString fail!: ", err)
+			logs.Error("Bufio ReadString fail!: %s \r\n", err)
 			os.Exit(1)
 		}
 		input = strings.TrimSpace(input)
@@ -164,11 +164,11 @@ func Run(taskBus chan<- func()) (int, error) {
 			}
 		case "show":
 			if err = printftEvent(data.WritePath); err != nil {
-				logs.Error("Printf it month event fail: %v", err)
+				logs.Error("Printf it month event fail: %v \r\n", err)
 			}
 		case "ls":
 			if err = printfList(); err != nil {
-				logs.Error("Printf list fail: %v", err)
+				logs.Error("Printf list fail: %v \r\n", err)
 			}
 		case "history":
 			c.ColorPrint(9, "Input which file you want to see > ")
@@ -185,10 +185,11 @@ func Run(taskBus chan<- func()) (int, error) {
 			}
 		default:
 			now := time.Now()
-			event := fmt.Sprintf("\n( %02d:%02d ) - - - - - - - - - - - - - - - %s\n", now.Hour(), now.Minute(), input)
+			event := fmt.Sprintf("\r\n( %02d:%02d ) - - - - - - - - - - - - - - - %s\r\n", now.Hour(), now.Minute(), input)
 			_, err = target.WriteString(event)
 			if err != nil {
-				logs.Error("Write string to target file fail! : %v", err)
+				logs.Error("Write string to target file fail! : %v \r\n", err)
+				c.ColorPrint(12, "Record event fail: %v", err)
 			} else {
 				data.TodayTimes++
 				c.ColorPrint(3, "Save scuess!\n")
@@ -200,8 +201,8 @@ func Run(taskBus chan<- func()) (int, error) {
 //printf welcome message
 func printWelcome() {
 	c.PrintfColorExample()
-	c.ColorPrint(5, "\n=====================\n==     EVENTER     ==\n=====================\n")
-	c.ColorPrint(5, "command: clear, end, turn, history, ls\n")
+	c.ColorPrint(13, "\n=====================\n==     EVENTER     ==\n=====================\n")
+	c.ColorPrint(13, "command: clear, end, turn, history, ls\n")
 	c.ColorPrint(11, "Welcome Back to Eventer !!! \n")
 	c.ColorPrint(11, "Last time of using it tool is: ")
 	duration := time.Since(data.LastTime)
