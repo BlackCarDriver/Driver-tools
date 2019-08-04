@@ -35,7 +35,7 @@ const (
 
 //return status code
 const (
-	Normal = iota
+	NormalReturn = iota
 	NotFound
 	Eventer
 	Coster
@@ -80,5 +80,11 @@ func GetTurnCode() int {
 	default:
 		ColorPrint(12, "No such code!")
 		return NotFound
+	}
+}
+
+func PrintfColorExample() {
+	for i := 0; i <= 15; i++ {
+		ColorPrint(i, "=%d=", i)
 	}
 }
