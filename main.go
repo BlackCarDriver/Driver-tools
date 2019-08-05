@@ -11,10 +11,11 @@ import (
 	c "./function/common"
 	"./function/coster"
 	"./function/eventer"
+	"./function/killer"
 )
 
 var (
-	function  *string = flag.String("f", "coster", "Eventer help you record what happen in every days")
+	function  *string = flag.String("f", "eventer", "Eventer help you record what happen in every days")
 	workerMap map[string]func(chan<- func()) (int, error)
 )
 
@@ -23,6 +24,7 @@ func init() {
 	workerMap = make(map[string]func(chan<- func()) (int, error))
 	workerMap["eventer"] = eventer.Run
 	workerMap["coster"] = coster.Run
+	workerMap["killer"] = killer.Run
 }
 
 func main() {
@@ -45,10 +47,13 @@ func main() {
 				time.Sleep(1 * time.Second)
 			case c.Eventer:
 				worker = eventer.Run
-				continue
 			case c.Coster:
 				worker = coster.Run
-				continue
+			case c.Killer:
+				worker = killer.Run
+			case c.KillBlacklist: //kill all pid in black list
+				killer.KillBlackList()
+				time.Sleep(3*time.Second)
 			default:
 				fmt.Println("Exit with unnormal Status: ", exitCode)
 			}
@@ -74,3 +79,5 @@ func destructor(task <-chan func(), exitSig chan os.Signal) {
 		}
 	}
 }
+
+//#######################  tools function  #####################

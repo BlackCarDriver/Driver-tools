@@ -37,9 +37,11 @@ const (
 const (
 	NormalReturn = iota
 	NotFound
+	ErrorExit
 	Eventer
 	Coster
-	ErrorExit
+	Killer
+	KillBlacklist
 )
 
 //################################ tool function
@@ -70,7 +72,7 @@ func ClearConsole() error {
 
 //return main with specilied exist code
 func GetTurnCode() int {
-	ColorPrint(8, "choise: [ eventer:1 ]  [ coster:2 ]")
+	ColorPrint(8, "choise: [ eventer:1 ]  [ coster:2 ]  [ taskkiller:3]")
 	ColorPrint(8, "\n Please input where do you want to go > ")
 	choise := 0
 	fmt.Scanf("%d\n", &choise)
@@ -79,8 +81,24 @@ func GetTurnCode() int {
 		return Eventer
 	case 2:
 		return Coster
+	case 3:
+		return Killer
 	default:
 		ColorPrint(12, "No such code!")
+		return NotFound
+	}
+}
+
+//do something special acording to the code
+func GetKeyCode() int {
+	ColorPrint(8, "choise: [ killBackList:1 ] ")
+	ColorPrint(8, "\n Please input what do you want to do > ")
+	choise := 0
+	fmt.Scanf("%d\n", &choise)
+	switch choise {
+	case 1:
+		return KillBlacklist
+	default:
 		return NotFound
 	}
 }

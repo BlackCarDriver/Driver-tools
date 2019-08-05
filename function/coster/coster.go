@@ -38,7 +38,6 @@ var dfData = costerData{ //default data
 	LastTime:  time.Now(),
 	MonthCost: 0.0,
 	TotalCost: 0.0,
-	LogsPath:  "./logs/coster.log",
 	WritePath: "./data/coster/coster.txt",
 }
 
@@ -46,6 +45,7 @@ func costerInit() error {
 	//setting up logger
 	logs.EnableFuncCallDepth(true)
 	logs.SetLogFuncCallDepth(3)
+	logs.SetLogger(logs.AdapterFile, `{"name":"./logs/coster.log"}`)
 	//read config file
 	file, err := os.Open(configPath)
 	if err != nil { //read config file fail
@@ -93,7 +93,6 @@ func costerInit() error {
 		return err
 	}
 	//config load scuess
-	logs.SetLogger(logs.AdapterFile, data.LogsPath)
 	//check target file exist, create a new one if not exist
 	_, err = os.Stat(data.WritePath)
 	if err != nil {
@@ -183,6 +182,11 @@ func Run(taskBus chan<- func()) (status int, err error) {
 		case "ls":
 			if err = printfList(); err != nil {
 				logs.Error("Printf list fail: %v \r\n", err)
+			}
+		case "key":
+			tcase := c.GetKeyCode()
+			if tcase != c.NotFound {
+				return tcase, nil
 			}
 		case "history":
 			c.ColorPrint(c.Light_cyan, "Input which file you want to see > ")

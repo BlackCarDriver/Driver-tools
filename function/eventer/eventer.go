@@ -25,7 +25,6 @@ var (
 type everterData struct {
 	LastTime   time.Time //lasttime of using it tool
 	TodayTimes int       //how many times using it tool itday
-	LogsPath   string    //where to save the logs file
 	WritePath  string    //where to write record
 }
 
@@ -37,7 +36,6 @@ var (
 		LastTime:   time.Now(),
 		TodayTimes: 0,
 		WritePath:  "./data/eventer/itmonth.txt",
-		LogsPath:   "./logs/eventer.log",
 	}
 )
 
@@ -45,6 +43,7 @@ func eventerInit() error {
 	//setting up logger
 	logs.EnableFuncCallDepth(true)
 	logs.SetLogFuncCallDepth(3)
+	logs.SetLogger(logs.AdapterFile, `{"filename":"./logs/eventer.log"}`)
 	//read config file
 	file, err := os.Open(configPath)
 	if err != nil { //read config file fail
@@ -82,7 +81,6 @@ func eventerInit() error {
 		return fmt.Errorf("Unmarshal eventer config fail: %v", err)
 	}
 	//config load scuess
-	logs.SetLogger(logs.AdapterFile, data.LogsPath)
 	//check target file exist, create a new one if not exist
 	_, err = os.Stat(data.WritePath)
 	if err != nil {
@@ -152,6 +150,11 @@ func Run(taskBus chan<- func()) (status int, err error) {
 			}
 		case "turn":
 			tcase := c.GetTurnCode()
+			if tcase != c.NotFound {
+				return tcase, nil
+			}
+		case "key":
+			tcase := c.GetKeyCode()
 			if tcase != c.NotFound {
 				return tcase, nil
 			}
