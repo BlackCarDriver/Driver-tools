@@ -39,6 +39,7 @@ const (
 	NotFound
 	Eventer
 	Coster
+	ErrorExit
 )
 
 //################################ tool function
@@ -67,6 +68,7 @@ func ClearConsole() error {
 	return nil
 }
 
+//return main with specilied exist code
 func GetTurnCode() int {
 	ColorPrint(8, "choise: [ eventer:1 ]  [ coster:2 ]")
 	ColorPrint(8, "\n Please input where do you want to go > ")
@@ -83,8 +85,18 @@ func GetTurnCode() int {
 	}
 }
 
+//print the color and correspond code
 func PrintfColorExample() {
 	for i := 0; i <= 15; i++ {
 		ColorPrint(i, "=%d=", i)
 	}
+}
+
+//run a windows cmd command
+func CmdExec(c string) error {
+	var cmd *exec.Cmd
+	cmd = exec.Command("cmd", "/c", c) //Windows example, its tested
+	cmd.Stdout = os.Stdout
+	cmd.Run()
+	return nil
 }

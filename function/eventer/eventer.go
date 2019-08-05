@@ -29,9 +29,8 @@ type everterData struct {
 	WritePath  string    //where to write record
 }
 
-//default config
 var (
-	configPath          = "./config/eventer.conf"
+	configPath          = "./config/eventer.json"
 	target     *os.File = nil           //the file write and read event logs from
 	data                = everterData{} //latest data
 	dfData              = everterData{  //default data
@@ -42,16 +41,14 @@ var (
 	}
 )
 
-func init() {
+func eventerInit() error {
 	//setting up logger
-	logs.SetLogger(logs.AdapterFile, `{"filename":"./logs/eventer.log"}`)
 	logs.EnableFuncCallDepth(true)
 	logs.SetLogFuncCallDepth(3)
 	//read config file
 	file, err := os.Open(configPath)
-	defer file.Close()
-	absConPath, _ := filepath.Abs(configPath)
 	if err != nil { //read config file fail
+		absConPath, _ := filepath.Abs(configPath)
 		logs.Warn("Eventer read config file %s fall: %v", absConPath, err)
 		fmt.Println("Init data not fond, Create a new noe? (yes/no) ")
 		var input string
@@ -60,41 +57,39 @@ func init() {
 			dfDataByte, _ := json.Marshal(dfData)
 			err := ioutil.WriteFile(configPath, dfDataByte, 0644)
 			if err != nil { //can not create a config file
-				logs.Error("Write init data to eventer config file fall: %v", err)
-				os.Exit(1)
+				return fmt.Errorf("Write init data to eventer config file fall: %v", err)
 			}
 			fmt.Println("Init data scuess!")
 			file.Close() //reopen config file
 			file, err = os.Open(configPath)
 			if err != nil { //can not read config file after create new one
-				logs.Error("Open config file Fail after init a new config!")
-				os.Exit(1)
+				return fmt.Errorf("Open config file Fail after init a new config!")
 			}
 		} else { //user input no
-			fmt.Println("exit")
-			os.Exit(0)
+			return fmt.Errorf("Inti data not found")
 		}
 	}
-	//load config
+	//open config scuess and going to read config
+	defer file.Close()
 	buf := bufio.NewReader(file)
 	bytes, err := ioutil.ReadAll(buf)
 	if err != nil {
-		logs.Error("Eventer read config file fall: %v", err)
-		os.Exit(1)
+		return fmt.Errorf("Eventer read config file fall: %v", err)
 	}
+	//read config scuess and going to load config
 	err = json.Unmarshal(bytes, &data)
 	if err != nil {
-		logs.Error("Unmarshal eventer config fail: %v", err)
-		os.Exit(1)
+		return fmt.Errorf("Unmarshal eventer config fail: %v", err)
 	}
+	//config load scuess
+	logs.SetLogger(logs.AdapterFile, data.LogsPath)
 	//check target file exist, create a new one if not exist
 	_, err = os.Stat(data.WritePath)
 	if err != nil {
 		logs.Error("Open write file fail : %v", err)
 		_, err := os.Create(data.WritePath)
 		if err != nil {
-			logs.Error("Create write file fail: %v", err)
-			os.Exit(1)
+			return fmt.Errorf("Create write file fail: %v", err)
 		} else {
 			fmt.Println("Already create a new enverter file!")
 		}
@@ -107,12 +102,11 @@ func init() {
 		}
 		dir := filepath.Dir(absWPath)
 		fileName := fmt.Sprintf("%s/%04d-%d.txt", dir, data.LastTime.Year(), data.LastTime.Month())
-		fmt.Println(fileName)
 		err = os.Rename(data.WritePath, fileName)
 		if err != nil {
 			logs.Error("Rename %s to %s fail: %v", data.WritePath, fileName, err)
 		} else {
-			c.ColorPrint(14, "============== Happy Good Month! ==============\n")
+			c.ColorPrint(c.Light_yellow, "============== Happy Good Month! ==============\n")
 			_, err = os.Create(data.WritePath)
 			if err != nil {
 				logs.Error("Create new file fail after rename old file: %v", err)
@@ -122,21 +116,21 @@ func init() {
 	//open target file with write to end model
 	target, err = os.OpenFile(data.WritePath, os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
-		logs.Error("Open target file fail after guarantee it is exist!: %v", err)
-		os.Exit(1)
+		return fmt.Errorf("Open target file fail after guarantee it is exist!: %v", err)
 	}
 	//printf a timestamp if start a new day
-	now := time.Now()
-	if now.Day() != data.LastTime.Day() {
-		c.ColorPrint(5, "Have A Good Day!\n")
-		event := fmt.Sprintf("\n===============================[ %s ]===============================\n", now.Format("01-02 Mon"))
+	if time.Now().Day() != data.LastTime.Day() {
+		c.ColorPrint(c.Light_purple, "Have A Good Day!\n")
+		event := fmt.Sprintf("\n===============================[ %s ]===============================\n", time.Now().Format("01-02 Mon"))
 		_, err = target.WriteString(event)
 		data.TodayTimes = 0
 	}
 	printWelcome()
+	return nil
 }
 
-func Run(taskBus chan<- func()) (int, error) {
+func Run(taskBus chan<- func()) (status int, err error) {
+	err = eventerInit()
 	taskBus <- saveState
 	defer target.Close()
 	reader := bufio.NewReader(os.Stdin)
@@ -144,8 +138,7 @@ func Run(taskBus chan<- func()) (int, error) {
 		c.ColorPrint(9, "Input event or command > ")
 		input, err := reader.ReadString('\n')
 		if err != nil {
-			logs.Error("Bufio ReadString fail!: %s \r\n", err)
-			os.Exit(1)
+			return c.ErrorExit, fmt.Errorf("Bufio ReadString fail!: %s \r\n", err)
 		}
 		input = strings.TrimSpace(input)
 		switch input {
@@ -202,7 +195,7 @@ func Run(taskBus chan<- func()) (int, error) {
 func printWelcome() {
 	c.PrintfColorExample()
 	c.ColorPrint(13, "\n=====================\n==     EVENTER     ==\n=====================\n")
-	c.ColorPrint(13, "command: clear, end, turn, history, ls\n")
+	c.ColorPrint(13, "command: show, clear, end, turn, history, ls\n")
 	c.ColorPrint(11, "Welcome Back to Eventer !!! \n")
 	c.ColorPrint(11, "Last time of using it tool is: ")
 	duration := time.Since(data.LastTime)
@@ -216,7 +209,7 @@ func printftEvent(filePath string) error {
 	absPath, _ := filepath.Abs(filePath)
 	file, err := os.Open(absPath)
 	if err != nil {
-		return fmt.Errorf("Open file faill when printf the eventer logs: %v", err)
+		return fmt.Errorf("Open file fail when printf the eventer logs: %v", err)
 	}
 	buf := bufio.NewReader(file)
 	for {
