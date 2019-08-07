@@ -1,0 +1,2 @@
+
+ statics :  [ Month: August ]   [ MonthlyCost: 0.0 ]   [ TotallyCost: 1644.0 ] 

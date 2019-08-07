@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -21,9 +20,9 @@ import (
 const configPath = "./config/coster.json"
 
 var (
-	l      *log.Logger
+	log    *logs.BeeLogger
 	data   *costerData //latest data
-	target *os.File    //the file write and read cost logs from
+	target *os.File    //the file write and read cost log from
 )
 
 type costerData struct {
@@ -43,14 +42,18 @@ var dfData = costerData{ //default data
 
 func costerInit() error {
 	//setting up logger
-	logs.EnableFuncCallDepth(true)
-	logs.SetLogFuncCallDepth(3)
-	logs.SetLogger(logs.AdapterFile, `{"name":"./logs/coster.log"}`)
+	log = logs.NewLogger()
+	log.EnableFuncCallDepth(true)
+	log.SetLogFuncCallDepth(3)
+	err := log.SetLogger(logs.AdapterFile, `{"filename":"./log/coster.log"}`)
+	if err != nil {
+		fmt.Printf("Create log file fail: %v", err)
+	}
 	//read config file
 	file, err := os.Open(configPath)
 	if err != nil { //read config file fail
 		absConPath, _ := filepath.Abs(configPath)
-		logs.Warn("Coster read config file '%s' fall: %v", absConPath, err)
+		log.Warn("Coster read config file '%s' fall: %v", absConPath, err)
 		fmt.Println("Init data not fond, Create a new noe? (yes/no) ")
 		var input string
 		fmt.Scanf("%s\n", &input)
@@ -59,7 +62,7 @@ func costerInit() error {
 			err := ioutil.WriteFile(configPath, dfDataByte, 0644)
 			if err != nil { //can not create a config file
 				err = fmt.Errorf("Write init data to coster config file fall: %v", err)
-				logs.Error(err)
+				log.Error("%v", err)
 				return err
 			}
 			fmt.Println("Init data scuess!")
@@ -67,12 +70,12 @@ func costerInit() error {
 			file, err = os.Open(configPath)
 			if err != nil { //can not read config file after create new one
 				err = fmt.Errorf("Open config file Fail after init a new config!")
-				logs.Error(err)
+				log.Error("%v", err)
 				return err
 			}
 		} else { //user input no
 			err = fmt.Errorf("Init data not found")
-			logs.Error(err)
+			log.Error("%v", err)
 			return err
 		}
 	}
@@ -82,25 +85,25 @@ func costerInit() error {
 	bytes, err := ioutil.ReadAll(buf)
 	if err != nil {
 		err = fmt.Errorf("coster read config file fall: %v", err)
-		logs.Error(err)
+		log.Error("%v", err)
 		return err
 	}
 	//read config scuess and going to load config
 	err = json.Unmarshal(bytes, &data)
 	if err != nil {
 		err = fmt.Errorf("Unmarshal coster config fail: %v", err)
-		logs.Error(err)
+		log.Error("%v", err)
 		return err
 	}
 	//config load scuess
 	//check target file exist, create a new one if not exist
 	_, err = os.Stat(data.WritePath)
 	if err != nil {
-		logs.Error("Open write file fail : %v", err)
+		log.Error("Open write file fail : %v", err)
 		_, err := os.Create(data.WritePath)
 		if err != nil {
 			err = fmt.Errorf("Create write file fail: %v", err)
-			logs.Error(err)
+			log.Error("%v", err)
 			return err
 		} else {
 			fmt.Println("Already create a new enverter file!")
@@ -110,18 +113,19 @@ func costerInit() error {
 	target, err = os.OpenFile(data.WritePath, os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		err = fmt.Errorf("Open target file fail after guarantee it is exist!: %v", err)
-		logs.Error(err)
+		log.Error("%v", err)
 		return err
 	}
 	//write to another file if start a new month
 	if data.LastTime.Month() != time.Now().Month() {
 		//record the monthly statistics at the end of target file
-		tailStamp := fmt.Sprintf("\n============[Month:%d]=================[MonthlyCost:%.1f]=================[TotallyCost:%.1f]==============\n",
+		tailStamp := fmt.Sprintf("\n statics :  [ Month: %s ]   [ MonthlyCost: %.1f ]   [ TotallyCost: %.1f ] \n",
 			data.LastTime.Month(), data.MonthCost, data.TotalCost)
 		_, err = target.WriteString(tailStamp)
+		c.ColorPrint(c.Light_green, tailStamp)
 		if err != nil {
 			err = fmt.Errorf("Write tailStamp to coster target file fail: %v", err)
-			logs.Error(err)
+			log.Error("%v", err)
 			return err
 		}
 		data.MonthCost = 0.0
@@ -129,19 +133,25 @@ func costerInit() error {
 		//save lastmonth history to another file
 		absWPath, err := filepath.Abs(data.WritePath)
 		if err != nil {
-			logs.Error("Get absolute path of write-path fail: %v", err)
+			log.Error("Get absolute path of write-path fail: %v", err)
 		}
 		dir := filepath.Dir(absWPath)
+		target.Close()
 		fileName := fmt.Sprintf("%s/%04d-%d.txt", dir, data.LastTime.Year(), data.LastTime.Month())
 		err = os.Rename(data.WritePath, fileName)
 		if err != nil {
-			logs.Error("Rename %s to %s fail: %v", data.WritePath, fileName, err)
+			log.Error("Rename %s to %s fail: %v", data.WritePath, fileName, err)
 		} else {
 			c.ColorPrint(c.Light_yellow, "============== Happy New Month! ==============\n")
 			_, err = os.Create(data.WritePath)
 			if err != nil {
-				logs.Error("Create new file fail after rename old file: %v", err)
+				log.Error("Create new file fail after rename old file: %v", err)
 			}
+		}
+		target, err = os.OpenFile(data.WritePath, os.O_WRONLY|os.O_APPEND, 0644)
+		if err != nil {
+			log.Error("Open target file fail after rename: %v", err)
+			return err
 		}
 	}
 	printWelcome()
@@ -155,11 +165,9 @@ func Run(taskBus chan<- func()) (status int, err error) {
 	}
 	taskBus <- saveState
 	defer target.Close()
-	reader := bufio.NewReader(os.Stdin)
 	for {
 		c.ColorPrint(c.Light_blue, "Input materials or command > ")
-		input := ""
-		fmt.Scanf("%s\n", &input)
+		input := c.ScanfWord()
 		input = strings.TrimSpace(input)
 		switch input {
 		case "":
@@ -168,7 +176,7 @@ func Run(taskBus chan<- func()) (status int, err error) {
 			return c.NormalReturn, nil
 		case "clear":
 			if err = c.ClearConsole(); err != nil {
-				logs.Error(err)
+				log.Error("%v", err)
 			}
 		case "turn":
 			tcase := c.GetTurnCode()
@@ -177,37 +185,40 @@ func Run(taskBus chan<- func()) (status int, err error) {
 			}
 		case "show":
 			if err = printfCost(data.WritePath); err != nil {
-				logs.Error("Printf it month cost record fail: %v \r\n", err)
+				log.Error("Printf it month cost record fail: %v \r\n", err)
 			}
 		case "ls":
 			if err = printfList(); err != nil {
-				logs.Error("Printf list fail: %v \r\n", err)
+				log.Error("Printf list fail: %v \r\n", err)
 			}
 		case "key":
 			tcase := c.GetKeyCode()
 			if tcase != c.NotFound {
 				return tcase, nil
 			}
-		case "history":
+		case "his":
 			c.ColorPrint(c.Light_cyan, "Input which file you want to see > ")
-			input, _ = reader.ReadString('\n')
-			input = strings.TrimSpace(input)
+			input := c.ScanfWord()
 			reg, err := regexp.Compile(`^\d+-\d+$`)
 			if !reg.MatchString(input) {
 				c.ColorPrint(c.Light_red, "File name not right, should like '2019-8'!\n")
 				continue
 			}
-			if err = printfCost(input); err != nil {
-				fmt.Println(err)
-				logs.Error(err)
+			absWPath, _ := filepath.Abs(data.WritePath)
+			historyDir := filepath.Dir(absWPath)
+			path := fmt.Sprintf("%s/%s.txt", historyDir, input)
+			err = printfCost(path)
+			if err != nil {
+				fmt.Println("show history fail: ", err)
 			}
+
 		default:
 			now := time.Now()
 			c.ColorPrint(c.Light_blue, "Input how many it cost: > ")
 			price := 0.0
 			_, err = fmt.Scanf("%f\n", &price)
 			if err != nil {
-				logs.Warn(err)
+				log.Warn("%v", err)
 				fmt.Println(err)
 				continue
 			}
@@ -216,7 +227,7 @@ func Run(taskBus chan<- func()) (status int, err error) {
 				now.Month(), now.Day(), input, price)
 			_, err = target.WriteString(record)
 			if err != nil {
-				logs.Error("Write string to target file fail! : %v \r\n", err)
+				log.Error("Write string to target file fail! : %v \r\n", err)
 				c.ColorPrint(c.Light_red, "Record event fail: %v", err)
 			} else {
 				data.MonthCost += price
@@ -230,7 +241,7 @@ func Run(taskBus chan<- func()) (status int, err error) {
 //printf a welcome statemt every times open it tools
 func printWelcome() {
 	c.ColorPrint(c.Light_blue, "\n=====================\n==     COSTER     ==\n=====================\n")
-	c.ColorPrint(c.Light_blue, "command: show, clear, end, turn, history, ls\n")
+	c.ColorPrint(c.Light_blue, "command: show, clear, end, turn, his, ls\n")
 	c.ColorPrint(c.Light_purple, "Welcome Back to Coster !!! \n")
 	c.ColorPrint(c.Light_purple, "Last time of using it tool is: ")
 	duration := time.Since(data.LastTime)
@@ -247,18 +258,18 @@ func saveState() {
 	lastestData, _ := json.Marshal(data)
 	err := ioutil.WriteFile(configPath, lastestData, os.ModeSetuid)
 	if err != nil {
-		logs.Error("Save lastest data to eventer config file fall: %v", err)
+		log.Error("Save lastest data to eventer config file fall: %v", err)
 	} else {
 		fmt.Println("Coster save state scuess!")
 	}
 }
 
-//printf cost logs of it month to console
+//printf cost log of it month to console
 func printfCost(filePath string) error {
 	absPath, _ := filepath.Abs(filePath)
 	file, err := os.Open(absPath)
 	if err != nil {
-		return fmt.Errorf("Open file fail when printf the coster logs: %v", err)
+		return fmt.Errorf("Open file fail when printf the coster log: %v", err)
 	}
 	buf := bufio.NewReader(file)
 	for {

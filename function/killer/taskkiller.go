@@ -90,7 +90,7 @@ func Run(taskBus chan<- func()) (status int, err error) {
 			return c.NormalReturn, nil
 		case "kill":
 			c.ColorPrint(c.Light_cyan, "Please input a tag to search >")
-			tag := scanfWord()
+			tag := c.ScanfWord()
 			TaskKiller(tag)
 		}
 	}
@@ -121,7 +121,7 @@ func TaskKiller(taskName string) {
 		c.ColorPrint(c.Light_blue, "%v\n", v)
 	}
 	c.ColorPrint(c.Light_red, "Find above task, Do you going to kill all of them?    ")
-	input := scanfWord()
+	input := c.ScanfWord()
 	if len(input) == 0 || input[0] != 'y' {
 		c.ColorPrint(c.Light_green, "Cancel....\r\n")
 		return
@@ -148,12 +148,6 @@ func killPid(pid string) string {
 	cmd.Stdout = &buf
 	cmd.Run()
 	return strings.TrimSpace(buf.String())
-}
-
-func scanfWord() string {
-	var temp string
-	fmt.Scanf("%s\n", &temp)
-	return strings.TrimSpace(temp)
 }
 
 func KillBlackList() error {

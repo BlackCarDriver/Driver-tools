@@ -1,0 +1,1 @@
+2019/08/07 09:31:12.611 [E] [coster.go:140]  Rename ./data/coster/coster.txt to D:\WorkPlace\Git WorPlace\Driver-tools\data\coster/2019-8.txt fail: rename ./data/coster/coster.txt D:\WorkPlace\Git WorPlace\Driver-tools\data\coster/2019-8.txt: The process cannot access the file because it is being used by another process.

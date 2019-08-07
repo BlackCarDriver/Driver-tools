@@ -1,0 +1,6 @@
+2019/08/07 09:49:57.688 [E] [main.go:40]  Open file fail when printf the coster log: open D:\WorkPlace\Git WorPlace\Driver-tools\2019-8: The system cannot find the file specified.
+2019/08/07 09:50:29.873 [W] [main.go:40]  newline in format does not match input
+2019/08/07 09:50:37.199 [W] [main.go:40]  unexpected newline
+2019/08/07 09:51:19.926 [E] [main.go:40]  Open file fail when printf the coster log: open D:\WorkPlace\Git WorPlace\Driver-tools\2019-8: The system cannot find the file specified.
+2019/08/07 10:07:04.305 [E] [main.go:40]  Open file fail when printf the coster log: open D:\WorkPlace\Git WorPlace\Driver-tools\2019-8: The system cannot find the file specified.
+2019/08/07 10:07:19.488 [W] [main.go:40]  newline in format does not match input

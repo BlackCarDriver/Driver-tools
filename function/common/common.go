@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 	"syscall"
 )
 
@@ -117,4 +118,10 @@ func CmdExec(c string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Run()
 	return nil
+}
+
+func ScanfWord() string {
+	var temp string
+	fmt.Scanf("%s\n", &temp)
+	return strings.TrimSpace(temp)
 }

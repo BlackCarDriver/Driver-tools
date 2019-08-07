@@ -166,7 +166,7 @@ func Run(taskBus chan<- func()) (status int, err error) {
 			if err = printfList(); err != nil {
 				logs.Error("Printf list fail: %v \r\n", err)
 			}
-		case "history":
+		case "his":
 			c.ColorPrint(9, "Input which file you want to see > ")
 			input, _ = reader.ReadString('\n')
 			input = strings.TrimSpace(input)
@@ -198,7 +198,7 @@ func Run(taskBus chan<- func()) (status int, err error) {
 func printWelcome() {
 	c.PrintfColorExample()
 	c.ColorPrint(13, "\n=====================\n==     EVENTER     ==\n=====================\n")
-	c.ColorPrint(13, "command: show, clear, end, turn, history, ls\n")
+	c.ColorPrint(13, "command: show, clear, end, turn, his, ls\n")
 	c.ColorPrint(11, "Welcome Back to Eventer !!! \n")
 	c.ColorPrint(11, "Last time of using it tool is: ")
 	duration := time.Since(data.LastTime)
