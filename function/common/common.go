@@ -125,3 +125,8 @@ func ScanfWord() string {
 	fmt.Scanf("%s\n", &temp)
 	return strings.TrimSpace(temp)
 }
+
+func WaitInput() {
+	any := ""
+	fmt.Scanf("%s\n", &any)
+}

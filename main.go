@@ -53,10 +53,10 @@ func main() {
 				worker = killer.Run
 			case c.KillBlacklist: //kill all pid in black list
 				killer.KillBlackList()
-				time.Sleep(3*time.Second)
 			default:
 				fmt.Println("Exit with unnormal Status: ", exitCode)
 			}
+			exitSinal <- syscall.Signal(0xc)
 			c.ClearConsole()
 		}
 	}
@@ -71,11 +71,17 @@ func destructor(task <-chan func(), exitSig chan os.Signal) {
 		case t := <-task: //receive a task
 			tasklist = append(tasklist, t)
 		case s := <-exitSig: //execute task function before exit
-			fmt.Printf("\nReceive exit signal: %v\n", s)
-			for i := 0; i < len(tasklist); i++ {
-				tasklist[i]()
+			if s == syscall.Signal(0xc) { //just save state but not exit
+				for i := 0; i < len(tasklist); i++ {
+					tasklist[i]()
+				}
+				tasklist = make([]func(), 0)
+			} else { //interrupt
+				for i := 0; i < len(tasklist); i++ {
+					tasklist[i]()
+				}
+				os.Exit(1)
 			}
-			os.Exit(1)
 		}
 	}
 }

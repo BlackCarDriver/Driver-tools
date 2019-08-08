@@ -89,7 +89,7 @@ func Run(taskBus chan<- func()) (status int, err error) {
 		case "end":
 			return c.NormalReturn, nil
 		case "kill":
-			c.ColorPrint(c.Light_cyan, "Please input a tag to search >")
+			c.ColorPrint(c.Light_yellow, "Please input a tag to search >")
 			tag := c.ScanfWord()
 			TaskKiller(tag)
 		}
@@ -126,37 +126,55 @@ func TaskKiller(taskName string) {
 		c.ColorPrint(c.Light_green, "Cancel....\r\n")
 		return
 	}
-	// kill all found task
-	reg2, _ := regexp.Compile(`(?i)[^\n ]*.exe\s+`)
-	reg3, _ := regexp.Compile(`\d+`)
+	//collect all process name in nonredundant
+	pnames := make(map[string]string, 0)
 	for _, v := range ress {
-		index := reg2.FindStringIndex(v)
-		if index == nil {
-			fmt.Printf("Can't find pid from : %s \n", v)
-			continue
+		if pname, err := getName(v); err != nil {
+			c.ColorPrint(c.Light_red, "%v", err)
+		} else {
+			pnames[pname] = pname
 		}
-		PID := reg3.FindString(v[index[1]:])
-		killRes := killPid(PID)
-		fmt.Printf("%s - - - - %s \n", PID, killRes)
 	}
+	// kill all process record in pnames
+	for _, n := range pnames {
+		killRes := KillPname(n)
+		c.ColorPrint(c.Light_green, "- - - - - %s - - - - \n", n)
+		c.ColorPrint(c.Light_blue, "%s\n", killRes)
+	}
+
 }
 
-func killPid(pid string) string {
+// find process name
+func getName(line string) (string, error) {
+	reg, _ := regexp.Compile(`[^\n][\S]+.exe`)
+	index := reg.FindStringIndex(line)
+	if index == nil {
+		return "", fmt.Errorf("Not find process name in %s", line)
+	}
+	return line[index[0]:index[1]], nil
+}
+
+// kill a process by name
+func KillPname(name string) string {
 	var cmd *exec.Cmd
-	cmd = exec.Command("cmd", "/c", "taskkill /pid ", pid) //Windows example, its tested
+	cmd = exec.Command("cmd", "/c", "taskkill /F /IM ", name) //Windows example, its tested
 	var buf bytes.Buffer
 	cmd.Stdout = &buf
 	cmd.Run()
 	return strings.TrimSpace(buf.String())
 }
 
+// autoly search and kill all process in blacklist
 func KillBlackList() error {
 	err := taskkillerinit()
 	if err != nil {
 		return err
 	}
 	for _, v := range confData.BlackList {
+		c.ColorPrint(c.Light_yellow, "%s \n", v)
 		TaskKiller(v)
 	}
+	fmt.Print("Input anything > ")
+	c.WaitInput()
 	return nil
 }
