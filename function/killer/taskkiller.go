@@ -17,7 +17,6 @@ import (
 
 var (
 	confPath = "./config/killer.json"
-	logsPath = "./logs/taskkiller.log"
 	confData = config{}
 )
 

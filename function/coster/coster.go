@@ -15,6 +15,7 @@ import (
 	c "../common"
 
 	"github.com/astaxie/beego/logs"
+	"github.com/axgle/mahonia"
 )
 
 const configPath = "./config/coster.json"
@@ -45,7 +46,7 @@ func costerInit() error {
 	log = logs.NewLogger()
 	log.EnableFuncCallDepth(true)
 	log.SetLogFuncCallDepth(3)
-	err := log.SetLogger(logs.AdapterFile, `{"filename":"./log/coster.log"}`)
+	err := log.SetLogger(logs.AdapterFile, `{"filename":"./logs/coster.log"}`)
 	if err != nil {
 		fmt.Printf("Create log file fail: %v", err)
 	}
@@ -271,7 +272,9 @@ func printfCost(filePath string) error {
 	if err != nil {
 		return fmt.Errorf("Open file fail when printf the coster log: %v", err)
 	}
-	buf := bufio.NewReader(file)
+	defer file.Close()
+	decoder := mahonia.NewDecoder("gbk")
+	buf := bufio.NewReader(decoder.NewReader(file))
 	for {
 		line, err := buf.ReadString(byte('\n'))
 		if err == io.EOF { //end of file

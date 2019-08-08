@@ -51,7 +51,7 @@ const (
 func ColorPrint(i int, format string, arg ...interface{}) {
 	proc.Call(uintptr(syscall.Stdout), uintptr(i))
 	fmt.Printf(format, arg...)
-	proc.Call(uintptr(syscall.Stdout), uintptr(15))
+	proc.Call(uintptr(syscall.Stdout), uintptr(Light_yellow))
 }
 
 //clear up console

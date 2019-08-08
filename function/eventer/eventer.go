@@ -16,6 +16,7 @@ import (
 	c "../common"
 
 	"github.com/astaxie/beego/logs"
+	"github.com/axgle/mahonia"
 )
 
 var (
@@ -37,6 +38,7 @@ var (
 		TodayTimes: 0,
 		WritePath:  "./data/eventer/itmonth.txt",
 	}
+	first_time bool = false
 )
 
 func eventerInit() error {
@@ -90,6 +92,7 @@ func eventerInit() error {
 			return fmt.Errorf("Create write file fail: %v", err)
 		} else {
 			fmt.Println("Already create a new enverter file!")
+			first_time = true
 		}
 	}
 	//write to another file if start a new month
@@ -117,7 +120,7 @@ func eventerInit() error {
 		return fmt.Errorf("Open target file fail after guarantee it is exist!: %v", err)
 	}
 	//printf a timestamp if start a new day
-	if time.Now().Day() != data.LastTime.Day() {
+	if time.Now().Day() != data.LastTime.Day() || first_time {
 		c.ColorPrint(c.Light_purple, "Have A Good Day!\n")
 		event := fmt.Sprintf("\n===============================[ %s ]===============================\n", time.Now().Format("01-02 Mon"))
 		_, err = target.WriteString(event)
@@ -133,7 +136,7 @@ func Run(taskBus chan<- func()) (status int, err error) {
 	defer target.Close()
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		c.ColorPrint(9, "Input event or command > ")
+		c.ColorPrint(c.Yellow, "Input event or command > ")
 		input, err := reader.ReadString('\n')
 		if err != nil {
 			return c.ErrorExit, fmt.Errorf("Bufio ReadString fail!: %s \r\n", err)
@@ -196,8 +199,7 @@ func Run(taskBus chan<- func()) (status int, err error) {
 
 //printf welcome message
 func printWelcome() {
-	c.PrintfColorExample()
-	c.ColorPrint(13, "\n=====================\n==     EVENTER     ==\n=====================\n")
+	c.ColorPrint(13, "=====================\n==     EVENTER     ==\n=====================\n")
 	c.ColorPrint(13, "command: show, clear, end, turn, his, ls\n")
 	c.ColorPrint(11, "Welcome Back to Eventer !!! \n")
 	c.ColorPrint(11, "Last time of using it tool is: ")
@@ -214,19 +216,16 @@ func printftEvent(filePath string) error {
 	if err != nil {
 		return fmt.Errorf("Open file fail when printf the eventer logs: %v", err)
 	}
-	buf := bufio.NewReader(file)
+	defer file.Close()
+	decoder := mahonia.NewDecoder("gbk")
+	buf := bufio.NewReader(decoder.NewReader(file))
 	for {
 		line, err := buf.ReadString(byte('\n'))
 		if err == io.EOF { //end of file
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("Error happen when printf the eventer log: %v", err)
-		}
-		dateReg, _ := regexp.Compile(`^=+\[[^\]]+\]=+\s*$`)
-		if dateReg.MatchString(line) {
-			c.ColorPrint(6, line)
-			continue
+			return fmt.Errorf("Error happen when printf the eventer data: %v", err)
 		}
 		logsReg, _ := regexp.Compile(`^\([\d\: ]+\)( -){10,} .+\s$`)
 		if logsReg.MatchString(line) {
