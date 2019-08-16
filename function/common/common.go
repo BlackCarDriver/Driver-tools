@@ -42,6 +42,7 @@ const (
 	Eventer
 	Coster
 	Killer
+	Learner
 	KillBlacklist
 )
 
@@ -73,7 +74,7 @@ func ClearConsole() error {
 
 //return main with specilied exist code
 func GetTurnCode() int {
-	ColorPrint(8, "choise: [ eventer:1 ]  [ coster:2 ]  [ taskkiller:3]")
+	ColorPrint(8, "choise: [ eventer:1 ]  [ coster:2 ]  [ taskkiller:3] [ learner:4 ]")
 	ColorPrint(8, "\n Please input where do you want to go > ")
 	choise := 0
 	fmt.Scanf("%d\n", &choise)
@@ -84,6 +85,8 @@ func GetTurnCode() int {
 		return Coster
 	case 3:
 		return Killer
+	case 4:
+		return Learner
 	default:
 		ColorPrint(12, "No such code!")
 		return NotFound

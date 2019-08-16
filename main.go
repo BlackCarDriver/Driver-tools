@@ -12,6 +12,7 @@ import (
 	"./function/coster"
 	"./function/eventer"
 	"./function/killer"
+	"./function/learner"
 )
 
 var (
@@ -25,6 +26,7 @@ func init() {
 	workerMap["eventer"] = eventer.Run
 	workerMap["coster"] = coster.Run
 	workerMap["killer"] = killer.Run
+	workerMap["learner"] = learner.Run
 }
 
 func main() {
@@ -51,6 +53,8 @@ func main() {
 				worker = coster.Run
 			case c.Killer:
 				worker = killer.Run
+			case c.Learner:
+				worker = learner.Run
 			case c.KillBlacklist: //kill all pid in black list
 				killer.KillBlackList()
 			default:

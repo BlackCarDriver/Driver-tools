@@ -16,7 +16,7 @@ import (
 	c "../common"
 
 	"github.com/astaxie/beego/logs"
-	"github.com/axgle/mahonia"
+	// "github.com/axgle/mahonia"
 )
 
 var (
@@ -107,7 +107,7 @@ func eventerInit() error {
 		if err != nil {
 			logs.Error("Rename %s to %s fail: %v", data.WritePath, fileName, err)
 		} else {
-			c.ColorPrint(c.Light_yellow, "============== Happy Good Month! ==============\n")
+			c.ColorPrint(c.Light_yellow, "\n============== Happy Good Month! ==============\n\n")
 			_, err = os.Create(data.WritePath)
 			if err != nil {
 				logs.Error("Create new file fail after rename old file: %v", err)
@@ -199,6 +199,7 @@ func Run(taskBus chan<- func()) (status int, err error) {
 
 //printf welcome message
 func printWelcome() {
+	// c.PrintfColorExample()
 	c.ColorPrint(13, "=====================\n==     EVENTER     ==\n=====================\n")
 	c.ColorPrint(13, "command: show, clear, end, turn, his, ls\n")
 	c.ColorPrint(11, "Welcome Back to Eventer !!! \n")
@@ -217,8 +218,9 @@ func printftEvent(filePath string) error {
 		return fmt.Errorf("Open file fail when printf the eventer logs: %v", err)
 	}
 	defer file.Close()
-	decoder := mahonia.NewDecoder("gbk")
-	buf := bufio.NewReader(decoder.NewReader(file))
+	// decoder := mahonia.NewDecoder("gbk")
+	// buf := bufio.NewReader(decoder.NewReader(file))
+	buf := bufio.NewReader(file)
 	for {
 		line, err := buf.ReadString(byte('\n'))
 		if err == io.EOF { //end of file

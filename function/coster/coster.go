@@ -15,7 +15,7 @@ import (
 	c "../common"
 
 	"github.com/astaxie/beego/logs"
-	"github.com/axgle/mahonia"
+	// "github.com/axgle/mahonia"
 )
 
 const configPath = "./config/coster.json"
@@ -129,8 +129,6 @@ func costerInit() error {
 			log.Error("%v", err)
 			return err
 		}
-		data.MonthCost = 0.0
-		saveState()
 		//save lastmonth history to another file
 		absWPath, err := filepath.Abs(data.WritePath)
 		if err != nil {
@@ -154,6 +152,8 @@ func costerInit() error {
 			log.Error("Open target file fail after rename: %v", err)
 			return err
 		}
+		data.MonthCost = 0.0
+		saveState()
 	}
 	printWelcome()
 	return nil
@@ -167,7 +167,7 @@ func Run(taskBus chan<- func()) (status int, err error) {
 	taskBus <- saveState
 	defer target.Close()
 	for {
-		c.ColorPrint(c.Light_blue, "Input materials or command > ")
+		c.ColorPrint(c.Light_cyan, "Input materials or command > ")
 		input := c.ScanfWord()
 		input = strings.TrimSpace(input)
 		switch input {
@@ -215,7 +215,7 @@ func Run(taskBus chan<- func()) (status int, err error) {
 
 		default:
 			now := time.Now()
-			c.ColorPrint(c.Light_blue, "Input how many it cost: > ")
+			c.ColorPrint(c.Light_cyan, "Input how many it cost: > ")
 			price := 0.0
 			_, err = fmt.Scanf("%f\n", &price)
 			if err != nil {
@@ -223,8 +223,7 @@ func Run(taskBus chan<- func()) (status int, err error) {
 				fmt.Println(err)
 				continue
 			}
-			fmt.Println(price)
-			record := fmt.Sprintf("\r\n( %02d-%02d ) - - - - - - - - - - - - - - - %-15s %.1f  \r\n",
+			record := fmt.Sprintf("\r\n时间:[ %02d-%02d ] - - - - - - - - - - - - - 物品: %-17s  金额:  %.1f \r\n",
 				now.Month(), now.Day(), input, price)
 			_, err = target.WriteString(record)
 			if err != nil {
@@ -241,8 +240,8 @@ func Run(taskBus chan<- func()) (status int, err error) {
 
 //printf a welcome statemt every times open it tools
 func printWelcome() {
-	c.ColorPrint(c.Light_blue, "\n=====================\n==     COSTER     ==\n=====================\n")
-	c.ColorPrint(c.Light_blue, "command: show, clear, end, turn, his, ls\n")
+	c.ColorPrint(c.Light_cyan, "\n=====================\n==     COSTER     ==\n=====================\n")
+	c.ColorPrint(c.Light_cyan, "command: show, clear, end, turn, his, ls\n")
 	c.ColorPrint(c.Light_purple, "Welcome Back to Coster !!! \n")
 	c.ColorPrint(c.Light_purple, "Last time of using it tool is: ")
 	duration := time.Since(data.LastTime)
@@ -273,8 +272,9 @@ func printfCost(filePath string) error {
 		return fmt.Errorf("Open file fail when printf the coster log: %v", err)
 	}
 	defer file.Close()
-	decoder := mahonia.NewDecoder("gbk")
-	buf := bufio.NewReader(decoder.NewReader(file))
+	// decoder := mahonia.NewDecoder("gbk")
+	// buf := bufio.NewReader(decoder.NewReader(file))
+	buf := bufio.NewReader(file)
 	for {
 		line, err := buf.ReadString(byte('\n'))
 		if err == io.EOF { //end of file
@@ -283,11 +283,18 @@ func printfCost(filePath string) error {
 		if err != nil {
 			return fmt.Errorf("Error happen when printf the coster log: %v", err)
 		}
-		logsReg, _ := regexp.Compile(`^\([\d\- ]+\)( -){10,} .+\s$`)
-		if logsReg.MatchString(line) {
-			c.ColorPrint(c.Light_blue, line[:9])
-			c.ColorPrint(c.Light_cyan, line[9:39])
-			c.ColorPrint(c.Light_green, line[39:])
+		if strings.HasPrefix(line, "时间") {
+			format := "时间:[ %s ] - - - - - - - - - - - - - 物品: %s             金额:  %f  "
+			var date string
+			var object string
+			var money float64
+			fmt.Sscanf(line, format, &date, &object, &money)
+			c.ColorPrint(c.Light_cyan, "时间:[")
+			c.ColorPrint(c.Light_green, " %s ", date)
+			c.ColorPrint(c.Light_cyan, "] - - - - - - - - - - - - - 物品:")
+			c.ColorPrint(c.Light_green, " %s\t\t\t", object)
+			c.ColorPrint(c.Light_cyan, "金额：")
+			c.ColorPrint(c.Light_green, "%.1f\n", money)
 		} else {
 			fmt.Print(line)
 		}
