@@ -163,9 +163,15 @@ func Run(taskBus chan<- func()) (status int, err error) {
 	}
 	taskBus <- saveState
 	defer target.Close()
+	reader := bufio.NewReader(os.Stdin)
 	for {
-		c.ColorPrint(c.Light_cyan, "Input new tag or command > ")
-		input := c.ScanfWord()
+		c.ColorPrint(c.Light_cyan, "Input command or what do you learn just now: > ")
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			logs.Error(err)
+			fmt.Println(err)
+			continue
+		}
 		input = strings.TrimSpace(input)
 		switch input {
 		case "":
@@ -212,8 +218,8 @@ func Run(taskBus chan<- func()) (status int, err error) {
 
 		default:
 			now := time.Now()
-			c.ColorPrint(c.Light_cyan, "Input what do you learn just now: > ")
-			record := fmt.Sprintf("时间:[ %02d-%02d ] - - - - - - - - - - - - - 技术：%s \r\n", now.Month(), now.Day(), input)
+			input = strings.Replace(input, " ", "_", -1)
+			record := fmt.Sprintf("\r\n时间:[ %02d-%02d ] - - - - - - - - - - - - - 技术：%v \r\n", now.Month(), now.Day(), input)
 			_, err = target.WriteString(record)
 			if err != nil {
 				log.Error("Write string to target file fail! : %v \r\n", err)

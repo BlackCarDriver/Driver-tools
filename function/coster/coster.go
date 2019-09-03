@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -215,9 +216,19 @@ func Run(taskBus chan<- func()) (status int, err error) {
 
 		default:
 			now := time.Now()
-			c.ColorPrint(c.Light_cyan, "Input how many it cost: > ")
 			price := 0.0
-			_, err = fmt.Scanf("%f\n", &price)
+			tmpinput := ""
+			c.ColorPrint(c.Light_cyan, "Input how many it cost: > ")
+			for {
+				fmt.Scanf("%s\n", &tmpinput)
+				if strings.TrimSpace(tmpinput) == "" {
+					continue
+				} else if price, err = strconv.ParseFloat(tmpinput, 64); err != nil {
+					fmt.Println("input money is unlegal, please try again")
+					continue
+				}
+				break
+			}
 			if err != nil {
 				log.Warn("%v", err)
 				fmt.Println(err)

@@ -122,7 +122,7 @@ func eventerInit() error {
 	//printf a timestamp if start a new day
 	if time.Now().Day() != data.LastTime.Day() || first_time {
 		c.ColorPrint(c.Light_purple, "Have A Good Day!\n")
-		event := fmt.Sprintf("\n===============================[ %s ]===============================\n", time.Now().Format("01-02 Mon"))
+		event := fmt.Sprintf("\n\n\n===============================[ %s ]===============================\n\n\n", time.Now().Format("01-02 Mon"))
 		_, err = target.WriteString(event)
 		data.TodayTimes = 0
 	}
