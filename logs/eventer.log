@@ -1,2 +1,5 @@
 2019/08/04 14:07:35.756 [E] [eventer.go:184]  Open file faill when printf the eventer logs: open D:\WorkPlace\Git WorPlace\Driver-tools\data\eventer\29188-23.txt: The system cannot find the file specified.
 2019/08/04 14:08:09.598 [E] [eventer.go:147]  Bufio ReadString fail!:  EOF
+2022/10/04 14:31:57.587 [E] [eventer.go:146]  Open write file fail : CreateFile ./data/eventer/itmonth.txt: The system cannot find the path specified.
+2022/10/04 14:31:57.588 [E] [main.go:24]  exit with error: err=create write file fail: open ./data/eventer/itmonth.txt: The system cannot find the path specified.
+2022/10/04 14:34:50.615 [E] [eventer.go:146]  Open write file fail : CreateFile ./data/eventer/itmonth.txt: The system cannot find the file specified.

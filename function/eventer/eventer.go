@@ -1,225 +1,226 @@
 package eventer
 
+// 事件记录器
+
 import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/BlackCarDriver/GoProject-api/common/util"
+	"github.com/astaxie/beego/logs"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
-
-	c "../common"
-
-	"github.com/astaxie/beego/logs"
-	// "github.com/axgle/mahonia"
 )
 
-var (
-	l *log.Logger
-)
-
-type everterData struct {
-	LastTime   time.Time //lasttime of using it tool
-	TodayTimes int       //how many times using it tool itday
-	WritePath  string    //where to write record
+// EventLog 事件记录器
+type EventLog struct {
+	target      *os.File       // 日志文件读写对象
+	config      eventLogConfig // 当前的配置
+	isFirstTime bool           // 是否第一次使用
 }
 
-var (
-	configPath          = "./config/eventer.json"
-	target     *os.File = nil           //the file write and read event logs from
-	data                = everterData{} //latest data
-	dfData              = everterData{  //default data
-		LastTime:   time.Now(),
-		TodayTimes: 0,
-		WritePath:  "./data/eventer/itmonth.txt",
-	}
-	first_time bool = false
-)
-
-func eventerInit() error {
-	//setting up logger
-	logs.EnableFuncCallDepth(true)
-	logs.SetLogFuncCallDepth(3)
-	logs.SetLogger(logs.AdapterFile, `{"filename":"./logs/eventer.log"}`)
-	//read config file
-	file, err := os.Open(configPath)
-	if err != nil { //read config file fail
-		absConPath, _ := filepath.Abs(configPath)
-		logs.Warn("Eventer read config file %s fall: %v", absConPath, err)
-		fmt.Println("Init data not fond, Create a new noe? (yes/no) ")
-		var input string
-		fmt.Scanf("%s\n", &input)
-		if input = strings.ToLower(input); input[0] == 'y' { //create a init data on config file
-			dfDataByte, _ := json.Marshal(dfData)
-			err := ioutil.WriteFile(configPath, dfDataByte, 0644)
-			if err != nil { //can not create a config file
-				return fmt.Errorf("Write init data to eventer config file fall: %v", err)
-			}
-			fmt.Println("Init data scuess!")
-			file.Close() //reopen config file
-			file, err = os.Open(configPath)
-			if err != nil { //can not read config file after create new one
-				return fmt.Errorf("Open config file Fail after init a new config!")
-			}
-		} else { //user input no
-			return fmt.Errorf("Inti data not found")
-		}
-	}
-	//open config scuess and going to read config
-	defer file.Close()
-	buf := bufio.NewReader(file)
-	bytes, err := ioutil.ReadAll(buf)
-	if err != nil {
-		return fmt.Errorf("Eventer read config file fall: %v", err)
-	}
-	//read config scuess and going to load config
-	err = json.Unmarshal(bytes, &data)
-	if err != nil {
-		return fmt.Errorf("Unmarshal eventer config fail: %v", err)
-	}
-	//config load scuess
-	//check target file exist, create a new one if not exist
-	_, err = os.Stat(data.WritePath)
-	if err != nil {
-		logs.Error("Open write file fail : %v", err)
-		_, err := os.Create(data.WritePath)
-		if err != nil {
-			return fmt.Errorf("Create write file fail: %v", err)
-		} else {
-			fmt.Println("Already create a new enverter file!")
-			first_time = true
-		}
-	}
-	//write to another file if start a new month
-	if data.LastTime.Month() != time.Now().Month() {
-		absWPath, err := filepath.Abs(data.WritePath)
-		if err != nil {
-			logs.Error("Get absolute path of write-path fail:%v", err)
-		}
-		dir := filepath.Dir(absWPath)
-		fileName := fmt.Sprintf("%s/%04d-%d.txt", dir, data.LastTime.Year(), data.LastTime.Month())
-		err = os.Rename(data.WritePath, fileName)
-		if err != nil {
-			logs.Error("Rename %s to %s fail: %v", data.WritePath, fileName, err)
-		} else {
-			c.ColorPrint(c.Light_yellow, "\n============== Happy Good Month! ==============\n\n")
-			_, err = os.Create(data.WritePath)
-			if err != nil {
-				logs.Error("Create new file fail after rename old file: %v", err)
-			}
-		}
-	}
-	//open target file with write to end model
-	target, err = os.OpenFile(data.WritePath, os.O_WRONLY|os.O_APPEND, 0644)
-	if err != nil {
-		return fmt.Errorf("Open target file fail after guarantee it is exist!: %v", err)
-	}
-	//printf a timestamp if start a new day
-	if time.Now().Day() != data.LastTime.Day() || first_time {
-		c.ColorPrint(c.Light_purple, "Have A Good Day!\n")
-		event := fmt.Sprintf("\n\n\n===============================[ %s ]===============================\n\n\n", time.Now().Format("01-02 Mon"))
-		_, err = target.WriteString(event)
-		data.TodayTimes = 0
-	}
-	printWelcome()
-	return nil
+func (e *EventLog) GetInfo() (name string, desc string) {
+	return "event", "事件记录工具"
 }
 
-func Run(taskBus chan<- func()) (status int, err error) {
-	err = eventerInit()
-	taskBus <- saveState
-	defer target.Close()
+func (e *EventLog) Run() (retCmd string, err error) {
+	err = e.initEventLog()
+	if err != nil {
+		util.ColorPrintf(util.ColorLightRed, "初始化eventLog失败\n: err=%v", err)
+		return
+	}
+
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		c.ColorPrint(c.Yellow, "Input event or command > ")
-		input, err := reader.ReadString('\n')
+		util.ColorPrintf(util.ColorYellow, "Input event or command > ")
+		var input string
+		input, err = reader.ReadString('\n')
 		if err != nil {
-			return c.ErrorExit, fmt.Errorf("Bufio ReadString fail!: %s \r\n", err)
+			return "", fmt.Errorf("Bufio ReadString fail!: %s \r\n", err)
 		}
 		input = strings.TrimSpace(input)
 		switch input {
 		case "":
 			continue
-		case "end", "exit":
-			return c.NormalReturn, nil
+		case "end", "exit", "turn": // 通用指令交到外层处理
+			return input, nil
 		case "clear":
-			if err = c.ClearConsole(); err != nil {
+			if err = util.ClearConsole(); err != nil {
 				logs.Error(err)
 			}
-		case "turn":
-			tcase := c.GetTurnCode()
-			if tcase != c.NotFound {
-				return tcase, nil
-			}
-		case "key":
-			tcase := c.GetKeyCode()
-			if tcase != c.NotFound {
-				return tcase, nil
-			}
-		case "show":
-			if err = printftEvent(data.WritePath); err != nil {
+		case "show": // 打印当前月份日志
+			if err = printEventLogFile(e.config.WritePath); err != nil {
 				logs.Error("Printf it month event fail: %v \r\n", err)
 			}
-		case "ls":
-			if err = printfList(); err != nil {
+		case "ls": // 打印日志列表
+			if err = printfEventLogsList(e.config.WritePath); err != nil {
 				logs.Error("Printf list fail: %v \r\n", err)
 			}
-		case "his":
-			c.ColorPrint(9, "Input which file you want to see > ")
+		case "his": // 打印指定月份的日志
+			util.ColorPrintf(9, "Input which file you want to see > ")
 			input, _ = reader.ReadString('\n')
 			input = strings.TrimSpace(input)
-			reg, err := regexp.Compile(`^\d+-\d+$`)
+			reg, _ := regexp.Compile(`^\d+-\d+$`)
 			if !reg.MatchString(input) {
-				c.ColorPrint(12, "File name not right, should like '2019-8'!\n")
+				util.ColorPrintf(12, "File name not right, should like '2019-8'!\n")
 				continue
 			}
-			if err = printfHistory(input); err != nil {
+			if err = printHistoryEventLog(input, e.config.WritePath); err != nil {
 				fmt.Println(err)
 				logs.Error(err)
 			}
-		default:
+		default: // 默认是记录日志
 			now := time.Now()
 			event := fmt.Sprintf("\r\n( %02d:%02d ) - - - - - - - - - - - - - - - %s\r\n", now.Hour(), now.Minute(), input)
-			_, err = target.WriteString(event)
+			_, err = e.target.WriteString(event)
 			if err != nil {
 				logs.Error("Write string to target file fail! : %v \r\n", err)
-				c.ColorPrint(12, "Record event fail: %v", err)
+				util.ColorPrintf(12, "Record event fail: %v", err)
 			} else {
-				data.TodayTimes++
-				c.ColorPrint(3, "Save scuess!\n")
+				e.config.TodayTimes++
+				util.ColorPrintf(3, "Save scuess!\n")
 			}
 		}
 	}
 }
 
-//printf welcome message
-func printWelcome() {
-	// c.PrintfColorExample()
-	c.ColorPrint(13, "=====================\n==     EVENTER     ==\n=====================\n")
-	c.ColorPrint(13, "command: show, clear, end, turn, his, ls\n")
-	c.ColorPrint(11, "Welcome Back to Eventer !!! \n")
-	c.ColorPrint(11, "Last time of using it tool is: ")
-	duration := time.Since(data.LastTime)
-	c.ColorPrint(10, " %d hour %d minute \n", int(duration.Hours())%24, int(duration.Minutes())%60)
-	c.ColorPrint(11, "The numbers you save event is: ")
-	c.ColorPrint(10, " %d \n", data.TodayTimes)
+func (e *EventLog) Exit() {
+	e.saveState()
+	return
 }
 
-//printf event logs of it month to console
-func printftEvent(filePath string) error {
+// ==============================
+
+func (e *EventLog) initEventLog() (err error) {
+	// 初始化logs
+	logs.EnableFuncCallDepth(true)
+	logs.SetLogFuncCallDepth(3)
+	logs.SetLogger(logs.AdapterFile, `{"filename":"./logs/eventer.log"}`)
+
+	// 读取配置
+	file, err := os.Open(configPath)
+	if err != nil { // 读取配置文件失败
+		absConPath, _ := filepath.Abs(configPath)
+		logs.Warn("eventLog read config file fail: path=%s err=%v", absConPath, err)
+		fmt.Println("Init data not fond, Create a new noe? (yes/no) ")
+		var input string
+		fmt.Scanf("%s\n", &input)
+		if input = strings.ToLower(input); input[0] == 'y' { // 初始化配置文件
+			dfDataByte, _ := json.Marshal(defaultConfig)
+			err = ioutil.WriteFile(configPath, dfDataByte, 0644)
+			if err != nil {
+				return fmt.Errorf("write init data to eventer config file fall: %v", err)
+			}
+			fmt.Println("Init data success!")
+			file.Close()
+			file, err = os.Open(configPath)
+			if err != nil {
+				return fmt.Errorf("open config file Fail after init a new config")
+			}
+		} else { // 输入"no"
+			return fmt.Errorf("inti data not found")
+		}
+	}
+	// 已成功打开配置文件
+	defer file.Close()
+	buf := bufio.NewReader(file)
+	bytes, err := ioutil.ReadAll(buf)
+	if err != nil {
+		return fmt.Errorf("eventer read config file fall: %v", err)
+	}
+	// 成功读取文件
+	err = json.Unmarshal(bytes, &e.config)
+	if err != nil {
+		return fmt.Errorf("unmarshal eventer config fail: %v", err)
+	}
+
+	// 检查文件日志文件是否存在
+	_, err = os.Stat(e.config.WritePath)
+	if err != nil {
+		logs.Error("Open write file fail : %v", err)
+		_, err := os.Create(e.config.WritePath)
+		if err != nil {
+			return fmt.Errorf("create write file fail: %v", err)
+		} else {
+			fmt.Println("Already create a new eventLog file!")
+			e.isFirstTime = true
+		}
+	}
+
+	// 进入新的一月,切换文件
+	if e.config.LastTime.Month() != time.Now().Month() {
+		absWPath, err := filepath.Abs(e.config.WritePath)
+		if err != nil {
+			logs.Error("Get absolute path of write-path fail:%v", err)
+		}
+		dir := filepath.Dir(absWPath)
+		fileName := fmt.Sprintf("%s/%04d-%d.txt", dir, e.config.LastTime.Year(), e.config.LastTime.Month())
+		err = os.Rename(e.config.WritePath, fileName)
+		if err != nil {
+			logs.Error("Rename %s to %s fail: %v", e.config.WritePath, fileName, err)
+		} else {
+			util.ColorPrintf(util.ColorLightYellow, "\n============== Happy Good Month! ==============\n\n")
+			_, err = os.Create(e.config.WritePath)
+			if err != nil {
+				logs.Error("Create new file fail after rename old file: %v", err)
+			}
+		}
+	}
+
+	// 追加模式打开文件
+	e.target, err = os.OpenFile(e.config.WritePath, os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return fmt.Errorf("open target file fail after guarantee it is exist!: %v", err)
+	}
+
+	// 当天第一次打开显示相关信息
+	if time.Now().Day() != e.config.LastTime.Day() || e.isFirstTime {
+		util.ColorPrintf(util.ColorLightPurple, "Have A Good Day!\n")
+		event := fmt.Sprintf("\n\n\n===============================[ %s ]===============================\n\n\n", time.Now().Format("01-02 Mon"))
+		_, err = e.target.WriteString(event)
+		e.config.TodayTimes = 0
+	}
+
+	// 初始化完成, 打印使用帮助
+	e.printWelcome()
+	return nil
+}
+
+// 打印帮助信息
+func (e *EventLog) printWelcome() {
+	duration := time.Since(e.config.LastTime)
+	util.ClearConsole()
+	util.ColorPrintf(13, "======================\n==   事件记录器     ==\n======================\n")
+	util.ColorPrintf(13, "命令列表:\nshow - 展示本月日志\nclear - 清空控制台\nend - 出程序\nturn - 切换功能\nhis - 查看过往日志\nls - 展示日志列表\n")
+	util.ColorPrintf(11, "上次记录时间距今: %d hour %d minute \n", int(duration.Hours())%24, int(duration.Minutes())%60)
+	util.ColorPrintf(11, "今日日志数量:    %d \n", e.config.TodayTimes)
+}
+
+// 更新配置文件
+func (e *EventLog) saveState() {
+	e.config.LastTime = time.Now()
+	after, _ := json.Marshal(e.config)
+	err := ioutil.WriteFile(configPath, after, os.ModeSetuid)
+	if err != nil {
+		logs.Error("save lastest data to eventer config file fall: %v", err)
+	} else {
+		fmt.Println("eventer save state success!")
+	}
+}
+
+// 打印时间日志文件
+func printEventLogFile(filePath string) error {
 	absPath, _ := filepath.Abs(filePath)
 	file, err := os.Open(absPath)
 	if err != nil {
-		return fmt.Errorf("Open file fail when printf the eventer logs: %v", err)
+		return fmt.Errorf("open file fail when printf the eventer logs: %v", err)
 	}
 	defer file.Close()
-	// decoder := mahonia.NewDecoder("gbk")
-	// buf := bufio.NewReader(decoder.NewReader(file))
 	buf := bufio.NewReader(file)
 	for {
 		line, err := buf.ReadString(byte('\n'))
@@ -227,13 +228,13 @@ func printftEvent(filePath string) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("Error happen when printf the eventer data: %v", err)
+			return fmt.Errorf("error happen when printf the eventer data: %v", err)
 		}
 		logsReg, _ := regexp.Compile(`^\([\d\: ]+\)( -){10,} .+\s$`)
 		if logsReg.MatchString(line) {
-			c.ColorPrint(12, line[:9])
-			c.ColorPrint(5, line[9:39])
-			c.ColorPrint(11, line[39:])
+			util.ColorPrintf(12, line[:9])
+			util.ColorPrintf(5, line[9:39])
+			util.ColorPrintf(11, line[39:])
 		} else {
 			fmt.Print(line)
 		}
@@ -241,45 +242,33 @@ func printftEvent(filePath string) error {
 	return nil
 }
 
-//use to update the program state before leave
-func saveState() {
-	data.LastTime = time.Now()
-	lastestData, _ := json.Marshal(data)
-	err := ioutil.WriteFile(configPath, lastestData, os.ModeSetuid)
-	if err != nil {
-		logs.Error("Save lastest data to eventer config file fall: %v", err)
-	} else {
-		fmt.Println("Eventer save state scuess!")
-	}
-}
-
-//display the history eventer files list
-func printfList() error {
-	absWPath, _ := filepath.Abs(data.WritePath)
+// 展示日志文件列表
+func printfEventLogsList(path string) error {
+	absWPath, _ := filepath.Abs(path)
 	historyDir := filepath.Dir(absWPath)
 	file, err := os.Open(historyDir)
 	if err != nil {
-		return fmt.Errorf("Open history directory fail: %v", err)
+		return fmt.Errorf("open history directory fail: %v", err)
 	}
 	defer file.Close()
 	fi, err := file.Readdir(0)
 	if err != nil {
-		return fmt.Errorf("Read history directory files list fail: %v", err)
+		return fmt.Errorf("read history directory files list fail: %v", err)
 	}
-	c.ColorPrint(11, "=========== History ===========\n")
+	util.ColorPrintf(11, "=========== History ===========\n")
 	for _, info := range fi {
-		c.ColorPrint(11, info.Name())
+		util.ColorPrintf(11, info.Name())
 		fmt.Println()
 	}
 	fmt.Println()
 	return nil
 }
 
-//printf specified month event logs
-func printfHistory(name string) error {
-	absWPath, _ := filepath.Abs(data.WritePath)
+// 打印特定月份的日志
+func printHistoryEventLog(name string, writePath string) error {
+	absWPath, _ := filepath.Abs(writePath)
 	historyDir := filepath.Dir(absWPath)
 	path := fmt.Sprintf("%s/%s.txt", historyDir, name)
-	err := printftEvent(path)
+	err := printEventLogFile(path)
 	return err
 }

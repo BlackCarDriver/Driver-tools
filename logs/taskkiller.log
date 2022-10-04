@@ -22,3 +22,7 @@
 2019/09/03 18:41:48.829 [E] [learner.go:171]  expected newline
 2019/09/03 18:45:56.072 [E] [learner.go:171]  expected newline
 2019/09/03 18:45:56.072 [E] [learner.go:171]  expected newline
+2022/10/03 23:13:52.887 [E] [eventer.go:88]  Open write file fail : CreateFile ./data/eventer/itmonth.txt: The system cannot find the path specified.
+2022/10/03 23:13:56.172 [E] [eventer.go:189]  Write string to target file fail! : invalid argument 
+
+2022/10/03 23:23:15.893 [E] [eventer.go:88]  Open write file fail : CreateFile ./data/eventer/itmonth.txt: The system cannot find the path specified.
