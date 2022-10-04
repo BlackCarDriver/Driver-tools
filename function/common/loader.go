@@ -51,6 +51,7 @@ func (ld *FuncLoader) Run(fName string) (err error) {
 
 		// 打印帮助并切换功能
 		if exitCmd == "turn" {
+			util.ClearConsole()
 			fName = ld.mustGetNextFunc()
 			if fName != "end" && fName != "exit" {
 				continue

@@ -20,6 +20,7 @@ func (f *FlowCounter) Run() (retCmd string, err error) {
 		rawInput := util.ScanStdLine()
 		switch rawInput {
 		case "turn", "end", "exit": // 交到外部处理
+			retCmd = rawInput
 			return
 		case "clear":
 			util.ClearConsole()

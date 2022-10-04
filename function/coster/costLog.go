@@ -236,11 +236,11 @@ func (c *CostLog) initCostLog() (err error) {
 // 打印使用帮助
 func (c *CostLog) printWelcome() {
 	duration := time.Since(c.config.LastTime)
-	util.ColorPrintf(util.ColorLightCyan, "\n=====================\n==     记账工具     ==\n=====================\n")
-	util.ColorPrintf(util.ColorLightCyan, "命令列表:\nshow - 展示本月日志\nclear - 清空控制台\nend - 退出\nturn - 切换功能\nhis - 查看指定月份的日志\nls - 查看历史日志文件列表\n")
-	util.ColorPrintf(util.ColorLightPurple, "距离上次记账已过:  %d hour %d minute \n", int(duration.Hours())%24, int(duration.Minutes())%60)
-	util.ColorPrintf(util.ColorLightPurple, "本月已消费:    %.1f \n", c.config.MonthCost)
-	util.ColorPrintf(util.ColorLightPurple, "至今已消费:    %.1f  \n", c.config.TotalCost)
+	util.ColorPrintf(util.ColorLightPurple, "\n=====================\n==     记账工具     ==\n=====================\n")
+	util.ColorPrintf(util.ColorLightPurple, "命令列表:\nshow - 展示本月日志\nclear - 清空控制台\nend - 退出\nturn - 切换功能\nhis - 查看指定月份的日志\nls - 查看历史日志文件列表\n")
+	util.ColorPrintf(util.ColorLightCyan, "距离上次记账已过:  %d hour %d minute \n", int(duration.Hours())%24, int(duration.Minutes())%60)
+	util.ColorPrintf(util.ColorLightCyan, "本月已消费:    %.1f \n", c.config.MonthCost)
+	util.ColorPrintf(util.ColorLightCyan, "至今已消费:    %.1f  \n", c.config.TotalCost)
 }
 
 // 保持状态到配置文件
