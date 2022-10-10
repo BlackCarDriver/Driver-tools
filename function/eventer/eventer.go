@@ -63,12 +63,12 @@ func (e *EventLog) Run() (retCmd string, err error) {
 				logs.Error("Printf list fail: %v \r\n", err)
 			}
 		case "his": // 打印指定月份的日志
-			util.ColorPrintf(9, "Input which file you want to see > ")
+			color.White("Input which file you want to see > ")
 			input, _ = reader.ReadString('\n')
 			input = strings.TrimSpace(input)
 			reg, _ := regexp.Compile(`^\d+-\d+$`)
 			if !reg.MatchString(input) {
-				util.ColorPrintf(12, "File name not right, should like '2019-8'!\n")
+				color.White("File name not right, should like '2019-8'!\n")
 				continue
 			}
 			if err = printHistoryEventLog(input, e.config.WritePath); err != nil {
@@ -81,10 +81,10 @@ func (e *EventLog) Run() (retCmd string, err error) {
 			_, err = e.target.WriteString(event)
 			if err != nil {
 				logs.Error("Write string to target file fail! : %v \r\n", err)
-				util.ColorPrintf(12, "Record event fail: %v", err)
+				color.White("Record event fail: %v", err)
 			} else {
 				e.config.TodayTimes++
-				util.ColorPrintf(3, "Save scuess!\n")
+				color.White("Save scuess!\n")
 			}
 		}
 	}
@@ -196,10 +196,10 @@ func (e *EventLog) initEventLog() (err error) {
 func (e *EventLog) printWelcome() {
 	duration := time.Since(e.config.LastTime)
 	util.ClearConsole()
-	util.ColorPrintf(13, "======================\n==   事件记录器     ==\n======================\n")
-	util.ColorPrintf(13, "命令列表:\nshow - 展示本月日志\nclear - 清空控制台\nend - 出程序\nturn - 切换功能\nhis - 查看过往日志\nls - 展示日志列表\n")
-	util.ColorPrintf(11, "上次记录时间距今: %d hour %d minute \n", int(duration.Hours())%24, int(duration.Minutes())%60)
-	util.ColorPrintf(11, "今日日志数量:    %d \n", e.config.TodayTimes)
+	color.White("======================\n==   事件记录器     ==\n======================\n")
+	color.White("命令列表:\nshow - 展示本月日志\nclear - 清空控制台\nend - 出程序\nturn - 切换功能\nhis - 查看过往日志\nls - 展示日志列表\n")
+	color.White("上次记录时间距今: %d hour %d minute \n", int(duration.Hours())%24, int(duration.Minutes())%60)
+	color.White("今日日志数量:    %d \n", e.config.TodayTimes)
 }
 
 // 更新配置文件
@@ -233,9 +233,9 @@ func printEventLogFile(filePath string) error {
 		}
 		logsReg, _ := regexp.Compile(`^\([\d\: ]+\)( -){10,} .+\s$`)
 		if logsReg.MatchString(line) {
-			util.ColorPrintf(12, line[:9])
-			util.ColorPrintf(5, line[9:39])
-			util.ColorPrintf(11, line[39:])
+			color.Yellow(line[:9])
+			color.White(line[9:39])
+			color.Yellow(line[39:])
 		} else {
 			fmt.Print(line)
 		}
@@ -256,9 +256,9 @@ func printfEventLogsList(path string) error {
 	if err != nil {
 		return fmt.Errorf("read history directory files list fail: %v", err)
 	}
-	util.ColorPrintf(11, "=========== History ===========\n")
+	color.White("=========== History ===========\n")
 	for _, info := range fi {
-		util.ColorPrintf(11, info.Name())
+		color.White(info.Name())
 		fmt.Println()
 	}
 	fmt.Println()

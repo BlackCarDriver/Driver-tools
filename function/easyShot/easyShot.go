@@ -30,9 +30,9 @@ func (d *DriverToolExample) Exit() {
 
 func (d *DriverToolExample) Run() (retCmd string, err error) {
 	for {
-		//util.ClearConsole()
+		util.ClearConsole()
 		d.printWelcome()
-		util.ColorPrintln(util.ColorLightYellow, "请输入保存截屏的路径, 或其他可用命令:")
+		color.Yellow("请输入保存截屏的路径, 或其他可用命令:")
 		var isDir bool
 		input := util.ScanStdLine()
 		if input == "end" || input == "exit" || input == "turn" { // 交到外层处理
@@ -84,7 +84,7 @@ func (d *DriverToolExample) startClipBoardMonitor(stopSignal <-chan string) {
 			d.tryWatchClipBoard()
 		}
 	}
-	util.ColorPrintln(util.ColorYellow, "任务结束")
+	color.Yellow("任务结束")
 }
 
 // 获取剪切板图片并保存的逻辑

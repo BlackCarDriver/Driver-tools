@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"github.com/BlackCarDriver/GoProject-api/common/util"
+	"github.com/fatih/color"
 )
 
 type FuncLoader struct {
@@ -65,13 +66,13 @@ func (ld *FuncLoader) Run(fName string) (err error) {
 
 // 打印全局使用帮助
 func (ld *FuncLoader) printHelp() {
-	util.ColorPrintln(util.ColorBlue, ld.HelpDesc)
+	color.Blue(ld.HelpDesc)
 }
 
 // 堵塞, 从控制台获取功能名输入,直到得到存在的功能名或end
 func (ld *FuncLoader) mustGetNextFunc() (validCmd string) {
 	ld.printHelp()
-	util.ColorPrintln(util.ColorGreen, "请输入功能名, 或输入 end 退出")
+	color.Green("请输入功能名, 或输入 end 退出")
 	for {
 		validCmd = util.ScanStdLine()
 		if validCmd == "end" || validCmd == "exit" {
@@ -81,7 +82,7 @@ func (ld *FuncLoader) mustGetNextFunc() (validCmd string) {
 		if exist {
 			break
 		}
-		util.ColorPrintln(util.ColorLightRed, "请输入存在的功能名")
+		color.Red("请输入存在的功能名")
 	}
 	return validCmd
 }

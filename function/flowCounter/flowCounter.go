@@ -81,11 +81,11 @@ func printRiseResult(before, after float64) {
 // 计算梯度
 func printFlowResult(current float64, flow float64, step int64) {
 	if flow < 0 {
-		util.ColorPrintln(util.ColorRed, "$每档浮动 必须大于0")
+		color.Red("$每档浮动 必须大于0")
 		return
 	}
 	if step <= 0 || step > 1000000 {
-		util.ColorPrintln(util.ColorRed, "$d档数 必须大于0")
+		color.Red("$d档数 必须大于0")
 		return
 	}
 	color.White("当前价=%.3f   每档浮动=%.3f  档位=%d \n", current, flow, step)
