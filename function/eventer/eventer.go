@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/BlackCarDriver/GoProject-api/common/util"
 	"github.com/astaxie/beego/logs"
+	"github.com/fatih/color"
 	"io"
 	"io/ioutil"
 	"os"
@@ -31,13 +32,13 @@ func (e *EventLog) GetInfo() (name string, desc string) {
 func (e *EventLog) Run() (retCmd string, err error) {
 	err = e.initEventLog()
 	if err != nil {
-		util.ColorPrintf(util.ColorLightRed, "初始化eventLog失败\n: err=%v", err)
+		color.Red("初始化eventLog失败\n: err=%v", err)
 		return
 	}
 
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		util.ColorPrintf(util.ColorYellow, "Input event or command > ")
+		color.Yellow("Input event or command > ")
 		var input string
 		input, err = reader.ReadString('\n')
 		if err != nil {
@@ -164,7 +165,7 @@ func (e *EventLog) initEventLog() (err error) {
 		if err != nil {
 			logs.Error("Rename %s to %s fail: %v", e.config.WritePath, fileName, err)
 		} else {
-			util.ColorPrintf(util.ColorLightYellow, "\n============== Happy Good Month! ==============\n\n")
+			color.Yellow("\n============== Happy Good Month! ==============\n\n")
 			_, err = os.Create(e.config.WritePath)
 			if err != nil {
 				logs.Error("Create new file fail after rename old file: %v", err)
@@ -180,7 +181,7 @@ func (e *EventLog) initEventLog() (err error) {
 
 	// 当天第一次打开显示相关信息
 	if time.Now().Day() != e.config.LastTime.Day() || e.isFirstTime {
-		util.ColorPrintf(util.ColorLightPurple, "Have A Good Day!\n")
+		color.Magenta("Have A Good Day!\n")
 		event := fmt.Sprintf("\n\n\n===============================[ %s ]===============================\n\n\n", time.Now().Format("01-02 Mon"))
 		_, err = e.target.WriteString(event)
 		e.config.TodayTimes = 0

@@ -3,6 +3,7 @@ package flowCounter
 import (
 	"fmt"
 	"github.com/BlackCarDriver/GoProject-api/common/util"
+	"github.com/fatih/color"
 	"regexp"
 	"strconv"
 	"strings"
@@ -43,7 +44,7 @@ func (f *FlowCounter) Run() (retCmd string, err error) {
 				printFlowResult(currentPrize, increase, step)
 				break
 			}
-			util.ColorPrintf(util.ColorRed, "错误的命令: %q\n", rawInput)
+			color.Red("错误的命令: %q\n", rawInput)
 		}
 	}
 	return "exit", nil
@@ -58,22 +59,22 @@ func (f *FlowCounter) Exit() {
 
 // 打印使用帮助
 func (f *FlowCounter) printHelp() {
-	util.ColorPrintf(util.ColorLightCyan, "\n============================\n==     价格浮动计算器     ==\n============================\n")
-	util.ColorPrintf(util.ColorLightCyan, "命令列表:  rise-涨跌幅计算 flow-梯度计算 turn-切换功能 end-退出程序 clear-清空控制台 \n")
-	util.ColorPrintf(util.ColorLightCyan, "rise 用法： rise $价格1 $价格2")
-	util.ColorPrintf(util.ColorGray, "     # 如 rise 100 101 , 计算100->101的涨幅\n")
-	util.ColorPrintf(util.ColorLightCyan, "flow 用法： flow $当前价格 $每档浮动 $档数(默认10)")
-	util.ColorPrintf(util.ColorGray, "     # 如 flow 100 1% 10, 生成涨跌10档价格\n")
+	color.Cyan("\n============================\n==     价格浮动计算器     ==\n============================\n")
+	color.Cyan("命令列表:  rise-涨跌幅计算 flow-梯度计算 turn-切换功能 end-退出程序 clear-清空控制台 \n")
+	color.Cyan("rise 用法： rise $价格1 $价格2")
+	color.White("     # 如 rise 100 101 , 计算100->101的涨幅\n")
+	color.Cyan("flow 用法： flow $当前价格 $每档浮动 $档数(默认10)")
+	color.White("     # 如 flow 100 1% 10, 生成涨跌10档价格\n")
 }
 
 // 计算浮动
 func printRiseResult(before, after float64) {
-	util.ColorPrintf(util.ColorGray, "原价: %.3f\n现价: %.3f\n", before, after)
+	color.White("原价: %.3f\n现价: %.3f\n", before, after)
 	flow := countRiseRange(before, after)
 	if after >= before {
-		util.ColorPrintf(util.ColorLightRed, "涨幅:  +%.3f%% \n", flow)
+		color.Red("涨幅:  +%.3f%% \n", flow)
 	} else {
-		util.ColorPrintf(util.ColorLightGreen, "涨幅: %.3f%% \n", flow)
+		color.Green("涨幅: %.3f%% \n", flow)
 	}
 }
 
@@ -87,7 +88,7 @@ func printFlowResult(current float64, flow float64, step int64) {
 		util.ColorPrintln(util.ColorRed, "$d档数 必须大于0")
 		return
 	}
-	util.ColorPrintf(util.ColorGray, "当前价=%.3f   每档浮动=%.3f  档位=%d \n", current, flow, step)
+	color.White("当前价=%.3f   每档浮动=%.3f  档位=%d \n", current, flow, step)
 
 	var upList, downList []float64
 
@@ -105,15 +106,15 @@ func printFlowResult(current float64, flow float64, step int64) {
 	}
 
 	// 打印
-	util.ColorPrintln(util.ColorWhite, "档位 ---- 价格 ----------- 涨幅 --")
+	color.White("档位 ---- 价格 ----------- 涨幅 --")
 	for i := len(upList) - 1; i >= 0; i-- {
 		r := countRiseRange(current, upList[i])
-		util.ColorPrintf(util.ColorRed, "+%d  \t  %.3f \t +%.3f%%\n", i+1, upList[i], r)
+		color.Red("+%d  \t  %.3f \t +%.3f%%\n", i+1, upList[i], r)
 	}
-	util.ColorPrintf(util.ColorWhite, "0  \t  %.3f\n \t 0%%", current)
+	color.White("0  \t  %.3f\n \t 0%%", current)
 	for i := 0; i < len(downList); i++ {
 		r := countRiseRange(current, downList[i])
-		util.ColorPrintf(util.ColorGreen, "-%d  \t  %.3f \t %.3f%%\n", i+1, downList[i], r)
+		color.Green("-%d  \t  %.3f \t %.3f%%\n", i+1, downList[i], r)
 	}
 }
 

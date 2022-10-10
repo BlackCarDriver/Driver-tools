@@ -32,7 +32,7 @@ func (ld *FuncLoader) Run(fName string) (err error) {
 	for {
 		selectFunc, exist := ld.FuncMap[fName]
 		if !exist {
-			util.ColorPrintf(util.ColorLightRed, "No such function: %s\n", fName)
+			color.Red("No such function: %s\n", fName)
 			break
 		}
 		var exitCmd string // 上个程序的结束返回

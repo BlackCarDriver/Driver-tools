@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/BlackCarDriver/GoProject-api/common/util"
 	"github.com/astaxie/beego/logs"
+	"github.com/fatih/color"
 	"io"
 	"io/ioutil"
 	"os"
@@ -28,15 +29,16 @@ func (c *CostLog) GetInfo() (name string, desc string) {
 func (c *CostLog) Run() (retCmd string, err error) {
 	err = c.initCostLog()
 	if err != nil {
-		util.ColorPrintf(util.ColorRed, "init fail: err=%v\n", err)
+		color.Red("init fail: err=%v\n", err)
 		return
 	}
 
 	for {
-		util.ColorPrintf(util.ColorCyan, "Input materials or command > ")
+		color.Cyan("Input materials or command > ")
 		input := util.ScanInput()
 		input = strings.TrimSpace(input)
-		util.ColorPrintln(util.ColorRed, input)
+		color.Red(input)
+
 		switch input {
 		case "":
 			continue
@@ -55,11 +57,11 @@ func (c *CostLog) Run() (retCmd string, err error) {
 				log.Error("Printf list fail: %v \r\n", err)
 			}
 		case "his":
-			util.ColorPrintf(util.ColorCyan, "Input which file you want to see > ")
+			color.Cyan("Input which file you want to see > ")
 			input = util.ScanInput()
 			reg, _ := regexp.Compile(`^\d+-\d+$`)
 			if !reg.MatchString(input) {
-				util.ColorPrintf(util.ColorLightRed, "File name not right, should like '2019-8'!\n")
+				color.Red("File name not right, should like '2019-8'!\n")
 				continue
 			}
 			absWPath, _ := filepath.Abs(c.config.WritePath)
@@ -73,10 +75,10 @@ func (c *CostLog) Run() (retCmd string, err error) {
 		default:
 			price := 0.0
 			now := time.Now()
-			util.ColorPrintf(util.ColorCyan, "Input how many it cost: > ")
+			color.Cyan("Input how many it cost: > ")
 			for {
 				cost := util.ScanInput()
-				util.ColorPrintln(util.ColorRed, cost)
+				color.Red(cost)
 				if strings.TrimSpace(cost) == "" {
 					continue
 				} else if price, err = strconv.ParseFloat(cost, 64); err != nil {
@@ -95,11 +97,11 @@ func (c *CostLog) Run() (retCmd string, err error) {
 			_, err = c.target.WriteString(record)
 			if err != nil {
 				log.Error("Write string to target file fail! : %v \r\n", err)
-				util.ColorPrintf(util.ColorLightRed, "Record event fail: %v", err)
+				color.Red("Record event fail: %v", err)
 			} else {
 				c.config.MonthCost += price
 				c.config.TotalCost += price
-				util.ColorPrintf(util.ColorLightGreen, "save success!\n")
+				color.Green("save success!\n")
 			}
 		}
 	}
@@ -197,7 +199,7 @@ func (c *CostLog) initCostLog() (err error) {
 		tailStamp := fmt.Sprintf("\n statics :  [ Month: %s ]   [ MonthlyCost: %.1f ]   [ TotallyCost: %.1f ] \n",
 			c.config.LastTime.Month(), c.config.MonthCost, c.config.TotalCost)
 		_, err = c.target.WriteString(tailStamp)
-		util.ColorPrintf(util.ColorLightGreen, tailStamp)
+		color.Green(tailStamp)
 		if err != nil {
 			err = fmt.Errorf("write tailStamp to coster target file fail: %v", err)
 			log.Error("%v", err)
@@ -215,7 +217,7 @@ func (c *CostLog) initCostLog() (err error) {
 		if err != nil {
 			log.Error("Rename %s to %s fail: %v", c.config.WritePath, fileName, err)
 		} else {
-			util.ColorPrintf(util.ColorLightYellow, "============== Happy New Month! ==============\n")
+			color.Yellow("============== Happy New Month! ==============\n")
 			_, err = os.Create(c.config.WritePath)
 			if err != nil {
 				log.Error("Create new file fail after rename old file: %v", err)
@@ -236,11 +238,11 @@ func (c *CostLog) initCostLog() (err error) {
 // 打印使用帮助
 func (c *CostLog) printWelcome() {
 	duration := time.Since(c.config.LastTime)
-	util.ColorPrintf(util.ColorLightPurple, "\n=====================\n==     记账工具     ==\n=====================\n")
-	util.ColorPrintf(util.ColorLightPurple, "命令列表:\nshow - 展示本月日志\nclear - 清空控制台\nend - 退出\nturn - 切换功能\nhis - 查看指定月份的日志\nls - 查看历史日志文件列表\n")
-	util.ColorPrintf(util.ColorLightCyan, "距离上次记账已过:  %d hour %d minute \n", int(duration.Hours())%24, int(duration.Minutes())%60)
-	util.ColorPrintf(util.ColorLightCyan, "本月已消费:    %.1f \n", c.config.MonthCost)
-	util.ColorPrintf(util.ColorLightCyan, "至今已消费:    %.1f  \n", c.config.TotalCost)
+	color.Yellow("\n=====================\n==     记账工具     ==\n=====================\n")
+	color.Yellow("命令列表:\nshow - 展示本月日志\nclear - 清空控制台\nend - 退出\nturn - 切换功能\nhis - 查看指定月份的日志\nls - 查看历史日志文件列表\n")
+	color.Cyan("距离上次记账已过:  %d hour %d minute \n", int(duration.Hours())%24, int(duration.Minutes())%60)
+	color.Cyan("本月已消费:    %.1f \n", c.config.MonthCost)
+	color.Cyan("至今已消费:    %.1f  \n", c.config.TotalCost)
 }
 
 // 保持状态到配置文件
@@ -281,12 +283,12 @@ func printfCost(filePath string) (err error) {
 			var object string
 			var money float64
 			fmt.Sscanf(line, format, &date, &object, &money)
-			util.ColorPrintf(util.ColorLightCyan, "时间:[")
-			util.ColorPrintf(util.ColorLightGreen, " %s ", date)
-			util.ColorPrintf(util.ColorLightCyan, "] - - - - - - - - - - - - - 物品:")
-			util.ColorPrintf(util.ColorLightGreen, " %s\t\t\t", object)
-			util.ColorPrintf(util.ColorLightCyan, "金额：")
-			util.ColorPrintf(util.ColorLightGreen, "%.1f\n", money)
+			color.Cyan("时间:[")
+			color.Green(" %s ", date)
+			color.Cyan("] - - - - - - - - - - - - - 物品:")
+			color.Green(" %s\t\t\t", object)
+			color.Cyan("金额：")
+			color.Green("%.1f\n", money)
 		} else {
 			fmt.Print(line)
 		}
@@ -307,9 +309,9 @@ func printfList(path string) error {
 	if err != nil {
 		return fmt.Errorf("read history directory files list fail: %v", err)
 	}
-	util.ColorPrintf(11, "=========== History ===========\n")
+	color.White("=========== History ===========\n")
 	for _, info := range fi {
-		util.ColorPrintf(11, info.Name())
+		color.Yellow(info.Name())
 		fmt.Println()
 	}
 	fmt.Println()
