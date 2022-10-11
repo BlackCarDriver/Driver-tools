@@ -12,23 +12,23 @@ import (
 	"time"
 )
 
-type DriverToolExample struct {
+type EasyShoot struct {
 	lastMd5Val  string // 上一个保存图片的md5值
 	lastSize    int    // 上次保存图片的大小
 	saveCounter int    // 总计保存多少个图片
 	savePath    string // 保存文件的路径
 }
 
-func (d *DriverToolExample) GetInfo() (name string, desc string) {
+func (d *EasyShoot) GetInfo() (name string, desc string) {
 	return "shot", "截屏自动保存工具"
 }
 
-func (d *DriverToolExample) Exit() {
+func (d *EasyShoot) Exit() {
 	fmt.Println("bey bey")
 	return
 }
 
-func (d *DriverToolExample) Run() (retCmd string, err error) {
+func (d *EasyShoot) Run() (retCmd string, err error) {
 	for {
 		util.ClearConsole()
 		d.printWelcome()
@@ -65,14 +65,14 @@ func (d *DriverToolExample) Run() (retCmd string, err error) {
 // ====================================
 
 // 打印使用帮助
-func (d *DriverToolExample) printWelcome() {
+func (d *EasyShoot) printWelcome() {
 	color.Magenta("\n===========================\n==     截屏自动保存工具     ==\n===========================\n")
 	color.Magenta("使用方法: 输入保存路径后,任务自动启动。 按'PrintScreen'键截图, 图片将自动保存到指定路径\n")
 	color.Magenta("命令列表: \nend - 退出\nturn - 切换功能\nclear - 清空控制台\n")
 }
 
 // startClipBoardMonitor 定时每秒从剪切板查看图片数据, 如果发现出现新截图,则保存到指定路径
-func (d *DriverToolExample) startClipBoardMonitor(stopSignal <-chan string) {
+func (d *EasyShoot) startClipBoardMonitor(stopSignal <-chan string) {
 	trigger := time.NewTicker(time.Second)
 	stop := false
 	for !stop {
@@ -88,7 +88,7 @@ func (d *DriverToolExample) startClipBoardMonitor(stopSignal <-chan string) {
 }
 
 // 获取剪切板图片并保存的逻辑
-func (d *DriverToolExample) tryWatchClipBoard() (err error) {
+func (d *EasyShoot) tryWatchClipBoard() (err error) {
 	content := clipboard.Read(clipboard.FmtImage)
 	if len(content) == 0 { // 剪切板的内容非图片
 		return
