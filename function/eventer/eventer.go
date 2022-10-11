@@ -196,10 +196,10 @@ func (e *EventLog) initEventLog() (err error) {
 func (e *EventLog) printWelcome() {
 	duration := time.Since(e.config.LastTime)
 	util.ClearConsole()
-	color.White("======================\n==   事件记录器     ==\n======================\n")
-	color.White("命令列表:\nshow - 展示本月日志\nclear - 清空控制台\nend - 出程序\nturn - 切换功能\nhis - 查看过往日志\nls - 展示日志列表\n")
-	color.White("上次记录时间距今: %d hour %d minute \n", int(duration.Hours())%24, int(duration.Minutes())%60)
-	color.White("今日日志数量:    %d \n", e.config.TodayTimes)
+	color.Green("======================\n==   事件记录器     ==\n======================\n")
+	color.Cyan("命令列表:\nshow - 展示本月日志\nclear - 清空控制台\nend - 出程序\nturn - 切换功能\nhis - 查看过往日志\nls - 展示日志列表\n")
+	color.Cyan("上次记录时间距今: %d hour %d minute \n", int(duration.Hours())%24, int(duration.Minutes())%60)
+	color.Cyan("今日日志数量:    %d \n", e.config.TodayTimes)
 }
 
 // 更新配置文件
@@ -224,7 +224,8 @@ func printEventLogFile(filePath string) error {
 	defer file.Close()
 	buf := bufio.NewReader(file)
 	for {
-		line, err := buf.ReadString(byte('\n'))
+		var line string
+		line, err = buf.ReadString(byte('\n'))
 		if err == io.EOF { //end of file
 			break
 		}
@@ -232,12 +233,13 @@ func printEventLogFile(filePath string) error {
 			return fmt.Errorf("error happen when printf the eventer data: %v", err)
 		}
 		logsReg, _ := regexp.Compile(`^\([\d\: ]+\)( -){10,} .+\s$`)
-		if logsReg.MatchString(line) {
-			color.Yellow(line[:9])
-			color.White(line[9:39])
-			color.Yellow(line[39:])
-		} else {
-			fmt.Print(line)
+		if logsReg.MatchString(line) { // 日志
+			fmt.Printf("%s%s%s\n",
+				color.CyanString(line[:9]),
+				color.HiBlackString(line[9:39]),
+				color.WhiteString(line[39:]))
+		} else { // 日期
+			color.Cyan(line)
 		}
 	}
 	return nil

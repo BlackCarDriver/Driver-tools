@@ -66,9 +66,10 @@ func (d *EasyShoot) Run() (retCmd string, err error) {
 
 // 打印使用帮助
 func (d *EasyShoot) printWelcome() {
-	color.Magenta("\n===========================\n==     截屏自动保存工具     ==\n===========================\n")
-	color.Magenta("使用方法: 输入保存路径后,任务自动启动。 按'PrintScreen'键截图, 图片将自动保存到指定路径\n")
-	color.Magenta("命令列表: \nend - 退出\nturn - 切换功能\nclear - 清空控制台\n")
+	util.ClearConsole()
+	color.Magenta("\n==============================\n==     截屏自动保存工具     ==\n==============================")
+	color.Magenta("使用方法: 输入保存路径后,任务自动启动。 按'PrintScreen'键截图, 图片将自动保存到指定路径")
+	color.HiBlack("其他命令: \nend - 退出\nturn - 切换功能\nclear - 清空控制台")
 }
 
 // startClipBoardMonitor 定时每秒从剪切板查看图片数据, 如果发现出现新截图,则保存到指定路径

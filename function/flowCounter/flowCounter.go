@@ -59,17 +59,18 @@ func (f *FlowCounter) Exit() {
 
 // 打印使用帮助
 func (f *FlowCounter) printHelp() {
-	color.Cyan("\n============================\n==     价格浮动计算器     ==\n============================\n")
-	color.Cyan("命令列表:  rise-涨跌幅计算 flow-梯度计算 turn-切换功能 end-退出程序 clear-清空控制台 \n")
-	color.Cyan("rise 用法： rise $价格1 $价格2")
-	color.White("     # 如 rise 100 101 , 计算100->101的涨幅\n")
-	color.Cyan("flow 用法： flow $当前价格 $每档浮动 $档数(默认10)")
-	color.White("     # 如 flow 100 1% 10, 生成涨跌10档价格\n")
+	util.ClearConsole()
+	color.HiBlue("\n============================\n==     价格浮动计算器     ==\n============================\n")
+	color.HiCyan("命令列表:  rise-涨跌幅计算 flow-梯度计算 turn-切换功能 end-退出程序 clear-清空控制台 \n")
+	fmt.Println(color.HiCyanString("rise 用法： rise $价格1 $价格2") +
+		color.HiBlackString("     # 如 rise 100 101 , 计算100->101的涨幅"))
+	fmt.Println(color.HiCyanString("flow 用法： flow $当前价格 $每档浮动 $档数(默认10)") +
+		color.HiBlackString("     # 如 flow 100 1% 10, 生成涨跌10档价格"))
 }
 
 // 计算浮动
 func printRiseResult(before, after float64) {
-	color.White("原价: %.3f\n现价: %.3f\n", before, after)
+	color.HiBlack("原价: %.3f\n现价: %.3f\n", before, after)
 	flow := countRiseRange(before, after)
 	if after >= before {
 		color.Red("涨幅:  +%.3f%% \n", flow)
@@ -88,7 +89,7 @@ func printFlowResult(current float64, flow float64, step int64) {
 		color.Red("$d档数 必须大于0")
 		return
 	}
-	color.White("当前价=%.3f   每档浮动=%.3f  档位=%d \n", current, flow, step)
+	color.HiBlack("当前价=%.3f   每档浮动=%.3f  档位=%d \n", current, flow, step)
 
 	var upList, downList []float64
 
@@ -106,15 +107,15 @@ func printFlowResult(current float64, flow float64, step int64) {
 	}
 
 	// 打印
-	color.White("档位 ---- 价格 ----------- 涨幅 --")
+	color.HiBlack("档位 ---- 价格 ----------- 涨幅 --")
 	for i := len(upList) - 1; i >= 0; i-- {
 		r := countRiseRange(current, upList[i])
-		color.Red("+%d  \t  %.3f \t +%.3f%%\n", i+1, upList[i], r)
+		color.Red("+%d  \t  %.3f \t +%.3f%%", i+1, upList[i], r)
 	}
-	color.White("0  \t  %.3f\n \t 0%%", current)
+	color.HiBlack("0  \t  %.3f \t 0%%", current)
 	for i := 0; i < len(downList); i++ {
 		r := countRiseRange(current, downList[i])
-		color.Green("-%d  \t  %.3f \t %.3f%%\n", i+1, downList[i], r)
+		color.Green("-%d  \t  %.3f \t %.3f%%", i+1, downList[i], r)
 	}
 }
 

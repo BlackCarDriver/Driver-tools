@@ -66,13 +66,13 @@ func (ld *FuncLoader) Run(fName string) (err error) {
 
 // 打印全局使用帮助
 func (ld *FuncLoader) printHelp() {
-	color.Blue(ld.HelpDesc)
+	color.HiCyan(ld.HelpDesc)
 }
 
 // 堵塞, 从控制台获取功能名输入,直到得到存在的功能名或end
 func (ld *FuncLoader) mustGetNextFunc() (validCmd string) {
 	ld.printHelp()
-	color.Green("请输入功能名, 或输入 end 退出")
+	color.HiMagenta("请输入功能名, 或输入 end 退出")
 	for {
 		validCmd = util.ScanStdLine()
 		if validCmd == "end" || validCmd == "exit" {

@@ -46,6 +46,7 @@ func (s *StockTool) Run() (retCmd string, err error) {
 
 // 打印使用帮助
 func (s *StockTool) printWelcome() {
+	util.ClearConsole()
 	color.HiRed("\n============================\n==     行情数据小助手     ==\n============================\n")
 	color.Magenta("可用命令:\noverall - 全盘概述 \n")
 	color.Magenta("end - 退出\nturn - 切换功能\nclear - 清空控制台\n")

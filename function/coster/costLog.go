@@ -37,7 +37,6 @@ func (c *CostLog) Run() (retCmd string, err error) {
 		color.Cyan("Input materials or command > ")
 		input := util.ScanInput()
 		input = strings.TrimSpace(input)
-		color.Red(input)
 
 		switch input {
 		case "":
@@ -78,7 +77,6 @@ func (c *CostLog) Run() (retCmd string, err error) {
 			color.Cyan("Input how many it cost: > ")
 			for {
 				cost := util.ScanInput()
-				color.Red(cost)
 				if strings.TrimSpace(cost) == "" {
 					continue
 				} else if price, err = strconv.ParseFloat(cost, 64); err != nil {
@@ -237,9 +235,10 @@ func (c *CostLog) initCostLog() (err error) {
 
 // 打印使用帮助
 func (c *CostLog) printWelcome() {
+	util.ClearConsole()
 	duration := time.Since(c.config.LastTime)
-	color.Yellow("\n=====================\n==     记账工具     ==\n=====================\n")
-	color.Yellow("命令列表:\nshow - 展示本月日志\nclear - 清空控制台\nend - 退出\nturn - 切换功能\nhis - 查看指定月份的日志\nls - 查看历史日志文件列表\n")
+	color.Yellow("\n======================\n==     记账工具     ==\n======================\n")
+	color.HiBlack("命令列表:\nshow - 展示本月日志\nclear - 清空控制台\nend - 退出\nturn - 切换功能\nhis - 查看指定月份的日志\nls - 查看历史日志文件列表\n")
 	color.Cyan("距离上次记账已过:  %d hour %d minute \n", int(duration.Hours())%24, int(duration.Minutes())%60)
 	color.Cyan("本月已消费:    %.1f \n", c.config.MonthCost)
 	color.Cyan("至今已消费:    %.1f  \n", c.config.TotalCost)
@@ -283,12 +282,13 @@ func printfCost(filePath string) (err error) {
 			var object string
 			var money float64
 			fmt.Sscanf(line, format, &date, &object, &money)
-			color.Cyan("时间:[")
-			color.Green(" %s ", date)
-			color.Cyan("] - - - - - - - - - - - - - 物品:")
-			color.Green(" %s\t\t\t", object)
-			color.Cyan("金额：")
-			color.Green("%.1f\n", money)
+			output := color.HiBlackString("时间:[") +
+				color.YellowString(" %s ", date) +
+				color.HiBlackString("] - - - - - - - - - - - - - 物品:") +
+				color.CyanString(" %s\t\t\t", object) +
+				color.HiBlackString("金额：") +
+				color.CyanString("%.1f", money)
+			fmt.Println(output)
 		} else {
 			fmt.Print(line)
 		}
