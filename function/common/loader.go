@@ -2,8 +2,8 @@ package common
 
 import (
 	"fmt"
+	"github.com/BlackCarDriver/GoProject-api/color"
 	"github.com/BlackCarDriver/GoProject-api/common/util"
-	"github.com/fatih/color"
 )
 
 type FuncLoader struct {

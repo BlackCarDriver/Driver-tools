@@ -2,6 +2,7 @@ package example
 
 import (
 	"fmt"
+	"github.com/BlackCarDriver/GoProject-api/color"
 	"github.com/BlackCarDriver/GoProject-api/common/util"
 )
 
@@ -18,7 +19,28 @@ func (d *DriverToolExample) Exit() {
 }
 
 func (d *DriverToolExample) Run() (retCmd string, err error) {
-	fmt.Println("example 运行中,请输入结束命令:")
-	cmd := util.ScanStdLine()
-	return cmd, nil
+	d.printWelcome()
+	for {
+		rawInput := util.ScanStdLine()
+		switch rawInput {
+		case "turn", "end", "exit": // 交到外部处理
+			retCmd = rawInput
+			return
+		case "clear":
+			util.ClearConsole()
+			continue
+		default:
+			// write your logic here
+		}
+	}
+	return "exit", nil
+}
+
+// ====================================
+
+// 打印使用帮助
+func (d *DriverToolExample) printWelcome() {
+	color.HiRed("\n===========================\n==     行情数据小助手     ==\n===========================\n")
+	color.Magenta("功能: overall - 全盘概述")
+	color.Magenta("其他命令: end - 退出\nturn - 切换功能\nclear - 清空控制台\n")
 }

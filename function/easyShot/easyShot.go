@@ -5,8 +5,8 @@ package easyShot
 import (
 	"crypto/md5"
 	"fmt"
+	"github.com/BlackCarDriver/GoProject-api/color"
 	"github.com/BlackCarDriver/GoProject-api/common/util"
-	"github.com/fatih/color"
 	"golang.design/x/clipboard"
 	"strings"
 	"time"
