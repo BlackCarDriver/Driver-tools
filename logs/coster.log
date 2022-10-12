@@ -1,9 +1,0 @@
-2019/08/07 09:31:12.611 [E] [coster.go:140]  Rename ./data/coster/coster.txt to D:\WorkPlace\Git WorPlace\Driver-tools\data\coster/2019-8.txt fail: rename ./data/coster/coster.txt D:\WorkPlace\Git WorPlace\Driver-tools\data\coster/2019-8.txt: The process cannot access the file because it is being used by another process.
-2019/08/08 14:16:59.688 [E] [coster.go:163]  Open write file fail : CreateFile ./data/coster/coster.txt: The system cannot find the file specified.
-2019/08/08 14:26:05.210 [W] [main.go:40]  strconv.ParseFloat: parsing "": invalid syntax
-2019/08/08 14:26:17.420 [W] [main.go:40]  strconv.ParseFloat: parsing "": invalid syntax
-2019/08/08 14:26:20.194 [W] [main.go:40]  strconv.ParseFloat: parsing "": invalid syntax
-2019/08/08 14:26:21.554 [W] [main.go:40]  strconv.ParseFloat: parsing "": invalid syntax
-2022/10/04 17:13:14.945 [E] [costLog.go:29]  open write file fail : CreateFile ./data/coster/coster.txt: The system cannot find the path specified.
-2022/10/04 17:13:14.945 [E] [costLog.go:29]  create write file fail: open ./data/coster/coster.txt: The system cannot find the path specified.
-2022/10/04 17:15:08.123 [E] [costLog.go:29]  open write file fail : CreateFile ./data/coster/coster.txt: The system cannot find the file specified.

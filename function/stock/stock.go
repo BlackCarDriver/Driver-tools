@@ -1,9 +1,11 @@
 package stock
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/BlackCarDriver/GoProject-api/color"
 	"github.com/BlackCarDriver/GoProject-api/common/util"
+	"os"
 	"strings"
 	"time"
 )
@@ -33,7 +35,7 @@ func (s *StockTool) Run() (retCmd string, err error) {
 		case "overall":
 			breakSig := make(chan string)
 			go startMonitorOverAll(breakSig)
-			any := util.ScanStdLine()
+			any := scanStdLine()
 			breakSig <- any
 		default:
 			color.Red("未知命令,请重新输入...")
@@ -75,7 +77,7 @@ func printOverAll() {
 	if err != nil {
 		return
 	}
-	up, hold, down, flow := ret.F104, ret.F106, ret.F106, ret.F3
+	up, hold, down, flow, prize := ret.F104, ret.F106, ret.F106, ret.F3, ret.F2
 	total := float64(up + hold + down)
 	maxLen := 60.0
 	upLen := int(float64(up) / total * maxLen)
@@ -84,9 +86,15 @@ func printOverAll() {
 	upStr := color.RedString("%s", strings.Repeat("#", upLen))
 	holdStr := color.HiBlackString("%s", strings.Repeat("#", holdLen))
 	downStr := color.GreenString("%s", strings.Repeat("#", downLen))
-	flowStr := color.HiRedString("%.2f", flow)
+	flowStr := color.HiRedString("%.2f %.2f", prize, flow)
 	if flow < 0 {
-		flowStr = color.HiBlueString("%.2f", flow)
+		flowStr = color.HiBlueString("%.2f %.2f", prize, flow)
 	}
 	fmt.Printf("%s %s%s%s %s\n", time.Now().Format("15:04"), upStr, holdStr, downStr, flowStr)
+}
+
+func scanStdLine() string {
+	reader := bufio.NewReader(os.Stdin)
+	text, _ := reader.ReadString('\n')
+	return strings.TrimSpace(text)
 }
