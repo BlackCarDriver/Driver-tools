@@ -54,9 +54,9 @@ func (s *StockTool) printWelcome() {
 	color.Magenta("end - 退出\nturn - 切换功能\nclear - 清空控制台\n")
 }
 
-// 涨跌状况监控
+// 大盘涨跌比例监控
 func startMonitorOverAll(breakSig <-chan string) {
-	tr := time.NewTicker(time.Minute)
+	tr := time.NewTicker(time.Minute * 5)
 	var input string
 	util.ClearConsole()
 	color.Blue("监控开始,输入任何东西结束~")
@@ -64,6 +64,9 @@ func startMonitorOverAll(breakSig <-chan string) {
 	for len(input) == 0 {
 		select {
 		case <-tr.C:
+			if !isStocking() {
+				break
+			}
 			printOverAll()
 		case input = <-breakSig:
 			break
@@ -77,7 +80,7 @@ func printOverAll() {
 	if err != nil {
 		return
 	}
-	up, hold, down, flow, prize := ret.F104, ret.F106, ret.F106, ret.F3, ret.F2
+	up, hold, down, flow, prize := ret.F104, ret.F106, ret.F105, ret.F3, ret.F2
 	total := float64(up + hold + down)
 	maxLen := 60.0
 	upLen := int(float64(up) / total * maxLen)
@@ -88,9 +91,21 @@ func printOverAll() {
 	downStr := color.GreenString("%s", strings.Repeat("#", downLen))
 	flowStr := color.HiRedString("%.2f %.2f", prize, flow)
 	if flow < 0 {
-		flowStr = color.HiBlueString("%.2f %.2f", prize, flow)
+		flowStr = color.HiGreenString("%.2f %.2f%%", prize, flow)
 	}
 	fmt.Printf("%s %s%s%s %s\n", time.Now().Format("15:04"), upStr, holdStr, downStr, flowStr)
+}
+
+// 是否开盘时间
+func isStocking() bool {
+	now := time.Now().Format("15:04")
+	if now > "09:30" && now < "11:30" {
+		return true
+	}
+	if now > "13:00" && now < "15:00" {
+		return true
+	}
+	return false
 }
 
 func scanStdLine() string {
