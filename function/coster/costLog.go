@@ -34,7 +34,7 @@ func (c *CostLog) Run() (retCmd string, err error) {
 	}
 
 	for {
-		color.Cyan("Input materials or command > ")
+		fmt.Print(color.CyanString("Input materials or command > "))
 		input := util.ScanInput()
 		input = strings.TrimSpace(input)
 

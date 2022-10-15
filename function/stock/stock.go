@@ -84,6 +84,7 @@ func printOverAll() {
 	total := float64(up + hold + down)
 	maxLen := 60.0
 	upLen := int(float64(up) / total * maxLen)
+
 	downLen := int(float64(down) / total * maxLen)
 	holdLen := int(maxLen) - upLen - downLen
 	upStr := color.RedString("%s", strings.Repeat("#", upLen))

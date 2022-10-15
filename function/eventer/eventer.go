@@ -38,7 +38,7 @@ func (e *EventLog) Run() (retCmd string, err error) {
 
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		color.Yellow("Input event or command > ")
+		fmt.Print(color.YellowString("Input event or command > "))
 		var input string
 		input, err = reader.ReadString('\n')
 		if err != nil {

@@ -53,11 +53,12 @@ func getOverAllData() (data utilRespData, err error) {
 	}
 	resp, err := util.GetRequireWithParams(reqPaht, params)
 	if err != nil {
-		fmt.Printf("get data fail: err=%v \n", err)
+		err = fmt.Errorf("get data fail: err=%v \n", err)
 		return
 	}
 	if resp.StatusCode != http.StatusOK {
 		fmt.Printf("unexpect status: %d \n", resp.StatusCode)
+		err = fmt.Errorf("status %d", resp.StatusCode)
 		return
 	}
 	rawResp, _ := ioutil.ReadAll(resp.Body)
