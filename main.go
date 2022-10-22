@@ -26,6 +26,7 @@ func main() {
 	loader.AddFunc(&easyShot.EasyShoot{})
 
 	flag.StringVar(&fName, "f", "event", loader.HelpDesc) // 功能名称
+	//flag.StringVar(&fName, "f", "stock", loader.HelpDesc) // 功能名称
 	flag.Parse()
 
 	err := loader.Run(fName)
