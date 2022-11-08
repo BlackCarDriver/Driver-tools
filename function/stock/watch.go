@@ -16,11 +16,13 @@ type watchInfo struct {
 	ZF      float64 // 振幅
 	Above   float64 // 卖出涨幅
 	Lower   float64 // 买入跌幅
+	Offset  float64 // 对比上次交易的涨跌幅
+	Note    string  // 备忘录
 	Decimal int
 }
 
 func (w watchInfo) GenDesc() (desc string, header string) {
-	header = " 名称     现价     涨跌幅    换手率    振幅    卖出涨幅   买入跌幅"
+	header = " 名称      现价     涨跌幅    换手率    振幅   触发卖   触发买   偏移值   备忘录"
 	stdFormat := fmt.Sprintf("%%.%df", w.Decimal)
 	items := []string{
 		color.HiBlackString(w.TAG),
@@ -30,6 +32,8 @@ func (w watchInfo) GenDesc() (desc string, header string) {
 		color.HiBlackString("%.2f%%", w.ZF),
 		colorFloat(w.Above, 2, "%"),
 		colorFloat(w.Lower, 2, "%"),
+		colorFloat(w.Offset, 2, "%"),
+		color.HiBlackString(w.Note),
 	}
 	return strings.Join(items, " "), header
 }
@@ -65,7 +69,7 @@ func printWatch() {
 	for i, item := range targets {
 		info, err := getWatchInfo(item)
 		if err != nil {
-			color.HiRed("get data fail: code=%s err=%v", item.Code, err)
+			color.HiBlack("get data fail: code=%s err=%v", item.Code, err)
 			continue
 		}
 		desc, header := info.GenDesc()
@@ -122,17 +126,24 @@ func parseWatchInfo(before *GetStockRespData, target monitorCfg) (after watchInf
 	currentPrize := parsePrize(before.F43, before.F59)
 	after = watchInfo{
 		TAG:     target.Tag,
+		Note:    target.Note,
 		XJ:      currentPrize,
 		Decimal: before.F59,
 		HSL:     parsePrize(before.F168, 2),
 		ZF:      parsePrize(before.F171, 2),
 		ZDF:     parsePrize(before.F170, 2),
 	}
+	if len(after.Note) == 0 {
+		after.Note = "-"
+	}
 	if target.SellPrize > 0 {
 		after.Above = countRiseRange(currentPrize, target.SellPrize)
 	}
 	if target.BuyPrize > 0 {
 		after.Lower = countRiseRange(currentPrize, target.BuyPrize)
+	}
+	if target.LastDeal > 0 {
+		after.Offset = countRiseRange(target.LastDeal, currentPrize)
 	}
 	return after
 }

@@ -13,11 +13,13 @@ var stockConfig struct {
 }
 
 type monitorCfg struct {
-	Code      string  `json:"code"` // 股票代码
-	Mode      int     `json:"mode"` // 1\0
-	SellPrize float64 `json:"sell"` // 卖出触发价
-	BuyPrize  float64 `json:"buy"`  // 买入触发价
-	Tag       string  `json:"tag"`  // 备注
+	Code      string  `json:"code"`     // 股票代码
+	Mode      int     `json:"mode"`     // 1\0
+	SellPrize float64 `json:"sell"`     // 卖出触发价
+	BuyPrize  float64 `json:"buy"`      // 买入触发价
+	LastDeal  float64 `json:"lastDeal"` // 上次交易时的价格
+	Tag       string  `json:"tag"`      // 昵称
+	Note      string  `json:"note"`     // 备忘录
 }
 
 // 读取配置
