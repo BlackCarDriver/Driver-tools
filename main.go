@@ -2,13 +2,10 @@ package main
 
 import (
 	"flag"
+	"github.com/BlackCarDriver/Driver-tools/function/bossExport"
 	c "github.com/BlackCarDriver/Driver-tools/function/common"
-	"github.com/BlackCarDriver/Driver-tools/function/coster"
-	"github.com/BlackCarDriver/Driver-tools/function/easyShot"
-	"github.com/BlackCarDriver/Driver-tools/function/eventer"
 	"github.com/BlackCarDriver/Driver-tools/function/example"
 	"github.com/BlackCarDriver/Driver-tools/function/flowCounter"
-	"github.com/BlackCarDriver/Driver-tools/function/stock"
 	"github.com/astaxie/beego/logs"
 )
 
@@ -19,14 +16,10 @@ var (
 func main() {
 	loader := c.NewFuncLoader()
 	loader.AddFunc(&example.DriverToolExample{})
-	loader.AddFunc(&eventer.EventLog{})
-	loader.AddFunc(&coster.CostLog{})
 	loader.AddFunc(&flowCounter.FlowCounter{})
-	loader.AddFunc(&stock.StockTool{})
-	loader.AddFunc(&easyShot.EasyShoot{})
+	loader.AddFunc(&bossExport.MongoExport{})
 
-	flag.StringVar(&fName, "f", "event", loader.HelpDesc) // 功能名称
-	//flag.StringVar(&fName, "f", "stock", loader.HelpDesc) // 功能名称
+	flag.StringVar(&fName, "f", "bossExport", loader.HelpDesc) // ./main -f=funcName 来指定功能
 	flag.Parse()
 
 	err := loader.Run(fName)
